@@ -17,3 +17,18 @@ function local_raise_resource_limits() {
         execute_sql("SET SESSION wait_timeout=3600", false);
     }
 }
+
+function local_root_category_name() {
+    global $COURSE;
+
+    if (empty($COURSE->category)) {
+        return false;
+    }
+
+    $path = get_field('course_categories', 'path', 'id', $COURSE->category);
+    $path = explode('/', $path);
+    $id = $path[1];
+    $name = get_field('course_categories', 'name', 'id', $id);
+
+    return $name;
+}

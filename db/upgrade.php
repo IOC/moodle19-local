@@ -8,7 +8,8 @@ function xmldb_local_upgrade($oldversion) {
     $index = array('assignment' => 'grade',
                    'forum' => 'scale',
                    'glossary' => 'scale',
-                   'journal' => 'assessed');
+                   'journal' => 'assessed',
+                   'questionnaire_quest_choice' => 'question_id');
     foreach ($index as $table => $field) {
         $table = new XMLDBTable($table);
         $index = new XMLDBIndex($field);

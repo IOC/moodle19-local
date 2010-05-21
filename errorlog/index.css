@@ -1,0 +1,14 @@
+#errorlog_content {
+    color: black;
+    background-color: white;
+    height: 500px;
+    width: 950px;
+    overflow: auto;
+    border: solid 1px silver;
+    margin: 5px 0 15px 0;
+    padding: 5px;
+}
+
+#errorlog_error {
+    margin: 10px;
+}

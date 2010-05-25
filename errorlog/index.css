@@ -2,6 +2,12 @@
     color: black;
     background-color: white;
     font-family: monospace;
+    border: none;
+    padding: 0;
+    margin: 0;
+}
+
+#errorlog_scroll {
     height: 500px;
     width: 950px;
     overflow: auto;

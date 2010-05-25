@@ -1,4 +1,3 @@
-window.onload = function() {
-    var content = document.getElementById('errorlog_content');
-    content.scrollTop = content.scrollHeight;
-}
+$(document).ready(function() {
+    $("#errorlog_scroll").scrollTop($("#errorlog_content").height());
+});

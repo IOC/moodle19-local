@@ -1,6 +1,7 @@
 #errorlog_content {
     color: black;
     background-color: white;
+    font-family: monospace;
     height: 500px;
     width: 950px;
     overflow: auto;

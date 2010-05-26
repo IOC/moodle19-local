@@ -13,16 +13,19 @@ if ($hassiteconfig) {
                                      '', '')
     );
 
+    $settings->add(
+        new admin_setting_configcheckbox('local_profiling_enable',
+                                         get_string('profiling_enable', 'local'),
+                                         '', '0')
+    );
+
     $ADMIN->add('local', $settings);
 
-    $ADMIN->add('local',
-                new admin_externalpage('local_batch',
-                                       get_string('batch', 'local'),
-                                       "{$CFG->wwwroot}/local/batch/"));
-
-    $ADMIN->add('local',
-                new admin_externalpage('local_errorlog',
-                                       get_string('errorlog', 'local'),
-                                       "{$CFG->wwwroot}/local/errorlog/",
-                                       'moodle/site:config'));
+    $pages = array('batch', 'errorlog', 'profiling');
+    foreach ($pages as $page) {
+        $ADMIN->add('local',
+                    new admin_externalpage("local_$page",
+                                           get_string($page, 'local'),
+                                           "{$CFG->wwwroot}/local/$page/"));
+    }
 }

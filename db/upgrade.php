@@ -28,9 +28,10 @@ function xmldb_local_upgrade($oldversion) {
         $result = rename_table($table, 'local_batch_job', false);
     }
 
-    $table = $structure->getTable('local_batch_job');
-    if ($result and !table_exists($table)) {
-        $result = create_table($table, false);
+    foreach ($structure->getTables() as $table) {
+        if ($result and !table_exists($table)) {
+            $result = create_table($table, false);
+        }
     }
 
     return $result;

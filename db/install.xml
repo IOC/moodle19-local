@@ -4,7 +4,7 @@
     xsi:noNamespaceSchemaLocation="../../lib/xmldb/xmldb.xsd"
 >
   <TABLES>
-    <TABLE NAME="local_batch_job" COMMENT="">
+    <TABLE NAME="local_batch_job" NEXT="local_profiling_log" COMMENT="">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" ENUM="false" NEXT="type"/>
         <FIELD NAME="type" TYPE="char" LENGTH="20" NOTNULL="true" SEQUENCE="false" ENUM="false" PREVIOUS="id" NEXT="params"/>
@@ -17,6 +17,45 @@
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
       </KEYS>
+    </TABLE>
+    <TABLE NAME="local_profiling_log" COMMENT="-" PREVIOUS="local_batch_job" NEXT="local_profiling_stats">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" ENUM="false" NEXT="year"/>
+        <FIELD NAME="year" TYPE="int" LENGTH="4" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" ENUM="false" PREVIOUS="id" NEXT="month"/>
+        <FIELD NAME="month" TYPE="int" LENGTH="2" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" ENUM="false" PREVIOUS="year" NEXT="day"/>
+        <FIELD NAME="day" TYPE="int" LENGTH="2" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" ENUM="false" PREVIOUS="month" NEXT="hour"/>
+        <FIELD NAME="hour" TYPE="int" LENGTH="2" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" ENUM="false" PREVIOUS="day" NEXT="course"/>
+        <FIELD NAME="course" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false" ENUM="false" PREVIOUS="hour" NEXT="script"/>
+        <FIELD NAME="script" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false" ENUM="false" PREVIOUS="course" NEXT="time"/>
+        <FIELD NAME="time" TYPE="number" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" ENUM="false" DECIMALS="5" PREVIOUS="script"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+    </TABLE>
+    <TABLE NAME="local_profiling_stats" COMMENT="-" PREVIOUS="local_profiling_log">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" ENUM="false" NEXT="year"/>
+        <FIELD NAME="year" TYPE="int" LENGTH="4" NOTNULL="false" UNSIGNED="true" SEQUENCE="false" ENUM="false" PREVIOUS="id" NEXT="month"/>
+        <FIELD NAME="month" TYPE="int" LENGTH="2" NOTNULL="false" UNSIGNED="true" SEQUENCE="false" ENUM="false" PREVIOUS="year" NEXT="day"/>
+        <FIELD NAME="day" TYPE="int" LENGTH="2" NOTNULL="false" UNSIGNED="true" SEQUENCE="false" ENUM="false" PREVIOUS="month" NEXT="hour"/>
+        <FIELD NAME="hour" TYPE="int" LENGTH="2" NOTNULL="false" UNSIGNED="true" SEQUENCE="false" ENUM="false" PREVIOUS="day" NEXT="course"/>
+        <FIELD NAME="course" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" ENUM="false" PREVIOUS="hour" NEXT="script"/>
+        <FIELD NAME="script" TYPE="char" LENGTH="100" NOTNULL="false" SEQUENCE="false" ENUM="false" PREVIOUS="course" NEXT="hits"/>
+        <FIELD NAME="hits" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" ENUM="false" PREVIOUS="script" NEXT="time"/>
+        <FIELD NAME="time" TYPE="number" LENGTH="15" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" ENUM="false" DECIMALS="5" PREVIOUS="hits"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id" NEXT="year_month_day_hour_course_script"/>
+        <KEY NAME="year_month_day_hour_course_script" TYPE="unique" FIELDS="year, month, day, hour, course, script" PREVIOUS="primary"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="year_month_day_hour_script" UNIQUE="false" FIELDS="year, month, day, hour, script" NEXT="year_month_day_course_script"/>
+        <INDEX NAME="year_month_day_course_script" UNIQUE="false" FIELDS="year, month, day, course, script" PREVIOUS="year_month_day_hour_script" NEXT="year_month_hour_course_script"/>
+        <INDEX NAME="year_month_hour_course_script" UNIQUE="false" FIELDS="year, month, hour, course, script" PREVIOUS="year_month_day_course_script" NEXT="year_day_hour_course_script"/>
+        <INDEX NAME="year_day_hour_course_script" UNIQUE="false" FIELDS="year, day, hour, course, script" PREVIOUS="year_month_hour_course_script" NEXT="month_day_hour_course_script"/>
+        <INDEX NAME="month_day_hour_course_script" UNIQUE="false" FIELDS="month, day, hour, course, script" PREVIOUS="year_day_hour_course_script"/>
+      </INDEXES>
     </TABLE>
   </TABLES>
 </XMLDB>

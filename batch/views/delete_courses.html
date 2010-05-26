@@ -1,0 +1,21 @@
+<?php $this->web->print_header(); ?>
+
+<div>
+  <form method="post"
+        action="<?php echo $this->web->url('delete_courses')->out(); ?>">
+    <input type="hidden" name="sesskey" id="sesskey"
+           value="<?php echo sesskey(); ?>" />
+    <div class="section">
+      <h3><?php echo batch_string('courses'); ?></h3>
+      <div id="course-tree">
+	<?php $this->web->print_courses_tree(); ?>
+      </div>
+    </div>
+    <div class="section">
+      <input type="submit" name="restart"
+	     value="<?php echo batch_string('add_jobs'); ?>" />
+    </div>
+  </form>
+</div>
+
+<?php $this->web->print_footer(); ?>

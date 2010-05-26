@@ -1,5 +1,6 @@
 <?php
 
+$string['batch'] = 'Batch jobs';
 $string['errorlog'] = 'Error log';
 $string['errorlog_filter'] = 'Filter';
 $string['errorlog_notfound'] = 'Error log file not found.';

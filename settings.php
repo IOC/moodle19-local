@@ -16,6 +16,11 @@ if ($hassiteconfig) {
     $ADMIN->add('local', $settings);
 
     $ADMIN->add('local',
+                new admin_externalpage('local_batch',
+                                       get_string('batch', 'local'),
+                                       "{$CFG->wwwroot}/local/batch/"));
+
+    $ADMIN->add('local',
                 new admin_externalpage('local_errorlog',
                                        get_string('errorlog', 'local'),
                                        "{$CFG->wwwroot}/local/errorlog/",

@@ -1,0 +1,15 @@
+<?php $this->web->print_header(); ?>
+<form method="post"
+      action="<?php echo $this->web->url('db_maint')->out(); ?>">
+    <input type="hidden" name="sesskey" id="sesskey"
+           value="<?php echo sesskey(); ?>" />
+    <div class="section">
+      <h3><?php echo batch_string('action'); ?></h3>
+      <?php choose_from_menu($options, 'action', '', ''); ?>
+    </div>
+    <div class="section">
+      <input type="submit" name="add_job"
+             value="<?php echo batch_string('add_job') ?>" />
+    </div>
+</form>
+<?php $this->web->print_footer(); ?>

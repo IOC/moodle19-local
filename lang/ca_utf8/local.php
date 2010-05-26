@@ -1,5 +1,6 @@
 <?php
 
+$string['batch'] = 'Tasques per lots';
 $string['errorlog'] = 'Registre d\'errors';
 $string['errorlog_filter'] = 'Filtre';
 $string['errorlog_notfound'] = 'No s\'ha trobat el fitxer de registre d\'errors.';

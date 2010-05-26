@@ -1,0 +1,52 @@
+<?php $this->web->print_header(true); ;?>
+
+<div>
+  <form method="post"
+        action="<?php echo $this->web->url('restart_courses')->out(); ?>">
+    <input type="hidden" name="sesskey" id="sesskey"
+           value="<?php echo sesskey(); ?>" />
+    <div class="section">
+      <h3><?php echo batch_string('courses'); ?></h3>
+      <div id="course-tree">
+	<?php $this->web->print_courses_tree(); ?>
+      </div>
+    </div>
+    <div class="section">
+      <h3><?php echo batch_string('parameters'); ?></h3>
+      <ul class="params">
+        <li>
+          <label for="startdate">
+            <?php echo batch_string('start_date'); ?>:
+          </label>
+          <input type="text" name="startdate" id="startdate" size="10"
+	         value="<?php echo $startdate ?>" />
+        </li>
+        <li>
+          <label for="category">
+            <?php echo batch_string('backup_category'); ?>:
+          </label>
+          <?php $this->web->print_category_menu('category'); ?>
+        </li>
+        <li>
+          <input type="checkbox" id="delete_groups" name="delete_groups"/>
+          <label for="delete_groups">
+            <?php echo batch_string('delete_groups'); ?>
+          </label>
+        </li>
+        <li>
+          <input type="checkbox" id="delete_all_role_assignments"
+                 name="delete_all_role_assignments"/>
+          <label for="delete_all_role_assignments">
+            <?php echo batch_string('delete_all_role_assignments'); ?>
+          </label>
+        </li>
+      </ul>
+    </div>
+    <div class="section">
+      <input type="submit" name="restart"
+	     value="<?php echo batch_string('add_jobs'); ?>" />
+    </div>
+  </form>
+</div>
+
+<?php $this->web->print_footer(); ?>

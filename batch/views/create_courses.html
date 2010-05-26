@@ -1,0 +1,76 @@
+<?php $this->web->print_header(true); ;?>
+
+<div>
+  <form id="form" method="post" enctype="multipart/form-data"
+        action="<?php echo $this->web->url('create_courses')->out(); ?>">
+    <input type="hidden" name="sesskey" id="sesskey"
+           value="<?php echo sesskey(); ?>" />
+
+    <div class="section">
+      <h3><?php print_string('backup'); ?></h3>
+      <input type="text" name="backup" id="backup"
+	     value="<?php p($this->backup); ?>" size="64"/>
+      <input type="hidden" name="sesskey" value="<?php echo sesskey(); ?>" />
+      <input type="hidden" name="course" value="<?php echo SITEID ?>" />
+      <div class="actions js-only">
+        <a href="#" id="choose-backup">
+          <?php print_string('chooseafile', 'resource'); ?>
+        </a>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3><?php echo batch_string('courses'); ?></h3>
+      <input type="hidden" name="lastindex"
+             value="<?php p($this->lastindex); ?>" />
+      <table id="course-list">
+        <tr>
+          <th><?php print_string('shortname'); ?></th>
+          <th><?php print_string('fullname'); ?></th>
+          <th><?php print_string('category'); ?></th>
+        </tr>
+        <?php foreach ($this->courses as $i => $course) { ?>
+        <tr>
+          <td><input type="text" size="16"
+                     name="shortname-<?php echo $i; ?>"
+                     value="<?php p($course->shortname); ?>" /></td>
+          <td><input type="text" size="48"
+                     name="fullname-<?php echo $i; ?>"
+                     value="<?php p($course->fullname); ?>" /></td>
+          <td><?php echo $this->web->print_category_menu("category-$i",
+                    $course->category) ?></td>
+          <td>
+            <a href="#" class="js-only delete-course">
+              <?php echo batch_string('delete'); ?>
+            </a>
+          </td>
+        </tr>
+        <?php } ?>
+      </table>
+      <div class="actions js-only">
+        <a href="#" id="add-course">
+          <?php echo batch_string('add'); ?>
+        </a>
+      </div>
+
+      <div class="actions js-only">
+        <div><?php echo batch_string('import_from_csv_file'); ?></div>
+        <input type="file" id="import-csv-file" name="csvfile" />
+      </div>
+    </div>
+
+    <div class="section">
+      <h3><?php echo batch_string('start_date'); ?></h3>
+      <input type="text" name="startdate" id="startdate"
+	     value="<?php p("$this->startday/$this->startmonth/$this->startyear"); ?>" />
+    </div>
+
+    <div class="section">
+      <input type="submit" name="restart"
+	     value="<?php echo batch_string('add_jobs'); ?>" />
+    </div>
+
+  </form>
+</div>
+
+<?php $this->web->print_footer(); ?>

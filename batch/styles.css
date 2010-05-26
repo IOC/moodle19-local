@@ -1,0 +1,68 @@
+.section {
+    margin-bottom: 20px;
+}
+
+.section h3 {
+    margin-bottom: 10px;
+}
+
+ul.params {
+    list-style-type: none;
+}
+
+ul.params li {
+    margin-bottom: 0.5em;
+}
+
+ul.params label {
+    padding-right: 0.5em;
+}
+
+ul.params input {
+    padding: 0.1em;
+    vertical-align: middle;
+    margin: 0;
+}
+
+#queue-table td, #queue-table th {
+    padding: 5px 10px;
+}
+
+#queue-table {
+    width: 100%;
+    margin: 0 auto;
+}
+
+#queue-filter {
+    margin-bottom: 10px;
+}
+
+#course-tree > ul {
+    padding-left: 0;
+}
+
+#course-tree li {
+    list-style: none;
+}
+
+#course-tree li img.hidden {
+    display: none;
+}
+
+#course-tree li input {
+    vertical-align: middle;
+    margin: 0;
+}
+
+.js-only {
+    display: none;
+}
+
+#course-list {
+    margin: 0;
+}
+
+.actions {
+    margin: 5px 0;
+}
+

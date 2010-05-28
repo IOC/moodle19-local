@@ -1,5 +1,18 @@
 <?php
 
+function local_course_backup($course) {
+    $data = new object;
+    return json_encode($data, JSON_HEX_TAG | JSON_HEX_APOS |
+                       JSON_HEX_QUOT | JSON_HEX_AMP);
+}
+
+function local_course_delete($id) {
+}
+
+function local_course_restore($id, $data) {
+    $data = json_decode($data);
+}
+
 function local_raise_resource_limits() {
     global $CFG;
 

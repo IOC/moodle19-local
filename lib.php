@@ -1,14 +1,5 @@
 <?php
 
-function local_course_record($id) {
-    $record = get_record('local_course', 'course', $id);
-    if (!$record) {
-        insert_record('local_course', (object) array('course' => $id));
-        return local_course_record($id);
-    }
-    return $record;
-}
-
 function local_course_backup($id) {
     $data = new object;
 
@@ -27,9 +18,32 @@ function local_course_backup($id) {
     return json_encode($data);
 }
 
+function local_course_create($id, $data) {
+    local_course_update($id, $data);
+}
+
 function local_course_delete($id) {
     delete_records('local_course', 'course', $id);
     delete_records('local_materials', 'course', $id);
+}
+
+function local_course_edit_form($id, $mform) {
+    $mform->addElement('header','',
+                       get_string('email_list', 'block_email_list'));
+    $choices = array();
+    $choices['0'] = get_string('no');
+    $choices['1'] = get_string('yes');
+    $mform->addElement('select', 'local_restrictemail',
+                       "Prohibeix entre alumnes", $choices);
+}
+
+function local_course_record($id) {
+    $record = get_record('local_course', 'course', $id);
+    if (!$record) {
+        insert_record('local_course', (object) array('course' => $id));
+        return local_course_record($id);
+    }
+    return $record;
 }
 
 function local_course_restore($id, $data) {
@@ -44,6 +58,12 @@ function local_course_restore($id, $data) {
         $record = (object) array('course' => $id, 'path' => addslashes($path));
         insert_record('local_materials', $record);
     }
+}
+
+function local_course_update($id, $data) {
+    $record = local_course_record($id);
+    $record->restrictemail = $data->local_restrictemail;
+    update_record('local_course', $record);
 }
 
 function local_raise_resource_limits() {

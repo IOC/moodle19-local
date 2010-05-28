@@ -1,16 +1,49 @@
 <?php
 
-function local_course_backup($course) {
+function local_course_record($id) {
+    $record = get_record('local_course', 'course', $id);
+    if (!$record) {
+        insert_record('local_course', (object) array('course' => $id));
+        return local_course_record($id);
+    }
+    return $record;
+}
+
+function local_course_backup($id) {
     $data = new object;
-    return json_encode($data, JSON_HEX_TAG | JSON_HEX_APOS |
-                       JSON_HEX_QUOT | JSON_HEX_AMP);
+
+    $record = local_course_record($id);
+    $data->gradeserror = $record->gradeserror;
+    $data->restrictemail = $record->restrictemail;
+
+    $data->materials = array();
+    $records = get_records('local_materials', 'course', $id);
+    if ($records) {
+        foreach ($records as $record) {
+            $data->materials[] = $record->path;
+        }
+    }
+
+    return json_encode($data);
 }
 
 function local_course_delete($id) {
+    delete_records('local_course', 'course', $id);
+    delete_records('local_materials', 'course', $id);
 }
 
 function local_course_restore($id, $data) {
     $data = json_decode($data);
+
+    $record = local_course_record($id);
+    $record->gradeserror = $data->gradeserror;
+    $record->restrictemail = $data->restrictemail;
+    update_record('local_course', $record);
+
+    foreach ($data->materials as $path) {
+        $record = (object) array('course' => $id, 'path' => addslashes($path));
+        insert_record('local_materials', $record);
+    }
 }
 
 function local_raise_resource_limits() {

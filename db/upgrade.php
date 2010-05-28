@@ -28,6 +28,11 @@ function xmldb_local_upgrade($oldversion) {
         $result = rename_table($table, 'local_batch_job', false);
     }
 
+    $table = new XMLDBTable('materials');
+    if ($result and table_exists($table)) {
+        $result = rename_table($table, 'local_materials', false);
+    }
+
     foreach ($structure->getTables() as $table) {
         if ($result and !table_exists($table)) {
             $result = create_table($table, false);

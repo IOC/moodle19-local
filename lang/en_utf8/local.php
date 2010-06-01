@@ -8,6 +8,7 @@ $string['errorlog_path'] = 'Path to error log file';
 $string['errorlog_refresh'] = 'Refresh';
 $string['local'] = 'Local';
 $string['local:enrolled'] = 'Enrolled';
+$string['othercourses'] = 'Other courses...';
 $string['profiling'] = 'Profiling';
 $string['profiling_course'] = 'Course';
 $string['profiling_day'] = 'Day';

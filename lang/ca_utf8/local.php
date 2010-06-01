@@ -8,6 +8,7 @@ $string['errorlog_path'] = 'Camí del fitxer de registre d\'errors';
 $string['errorlog_refresh'] = 'Refresca';
 $string['local'] = 'Local';
 $string['local:enrolled'] = 'Inscrit';
+$string['othercourses'] = 'Altres cursos...';
 $string['profiling'] = 'Profiling';
 $string['profiling_course'] = 'Curs';
 $string['profiling_day'] = 'Dia';

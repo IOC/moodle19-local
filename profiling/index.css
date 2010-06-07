@@ -2,21 +2,11 @@
     margin-bottom: 1em;
 }
 
-#stats-month, #stats-day, #stats-hour {
-    margin-right: 1em;
+#stats-day, #stats-hour {
     width: 4em;
 }
 
-#stats-year {
-    margin-right: 1em;
-    width: 5em;
-}
-
-#stats-hour {
-    margin-right: 2em;
-}
-
-#stats-hits {
+#stats-year, #stats-month, #stats-day, #stats-hour, #stats-hits {
     margin-right: 1em;
 }
 
@@ -33,4 +23,8 @@
 
 #stats table td {
     padding: 0.2em 1em;
+}
+
+.jqplot-highlighter-tooltip {
+    background: rgba(240,240,240,0.9);
 }

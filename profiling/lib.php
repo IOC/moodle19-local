@@ -59,7 +59,6 @@ class local_profiling {
 
 }
 
-
 class local_profiling_log {
 
     function fetch_aggregate($maxid, $fields) {
@@ -104,59 +103,6 @@ class local_profiling_log {
     }
 }
 
-class local_profiling_objects {
-
-    function add_object($object) {
-        delete_records('local_profiling_object', 'id', $object->id);
-        $record = (object) array('id' => $object->id,
-                                 'object' => addslashes(json_encode($object)));
-        insert_record('local_profiling_object', $record);
-    }
-
-    function days($week_id) {
-        return self::objects(str_replace('week-', 'day-', $week_id));
-    }
-
-    function hours($day_id) {
-        return self::objects(str_replace('day-', 'hour-', $day_id));
-    }
-
-    function id($year, $month, $day, $hour) {
-        $date = getdate(mktime($year, $month, $day));
-
-        $year_start = mktime($year, 9, 1);
-
-        $hour = (int) $hour;
-        $wday = (int) $data->wday;
-
-        $year = $year;
-        $day = 0;
-
-        return sprintf("day-%02d02d%01d%02d", $year, $week, $day, $hour);
-    }
-
-    function object($id) {
-        $record = get_record('local_profiling_object', 'id', $id);
-        return $record ? json_decode($record->object) : false;
-    }
-
-    function objects($prefix) {
-        $records = get_records_select('local_profiling_object',
-                                      "id LIKE '$prefix%'", 'id', 'id');
-        return $records ? array_keys($records) : array();
-    }
-
-    function weeks($year_id) {
-        return self::objects(str_replace('year-', 'week-', $year_id));
-    }
-
-    function years() {
-        return self::objects('year-');
-    }
-
-}
-
-
 class local_profiling_stats {
 
     function add($year, $month, $day, $hour, $course, $script, $hits, $time) {
@@ -192,35 +138,159 @@ class local_profiling_stats {
         return $result;
     }
 
-    function exists($year, $month, $day, $hour) {
-        $where = array('year' => $year, 'month' => $month,
-                       'day' => $day, 'hour' => $hour);
-        $select = local_profiling_array_to_select($where);
-        return record_exists_select('local_profiling_stats', $select);
+    function fetch($year, $month=false, $day=false, $hour=false) {
+        $record = get_record_select('local_profiling_stats',
+                                    $this->where($year, $month, $day, $hour));
+        return (object) array('hits' => (int) $record->hits,
+                              'time' => (float) $record->time / $record->hits);
     }
 
-    function fetch($where, $sort='year, month, day, hour, course, script',
-                   $limitfrom='', $limitnum='') {
+    function fetch_months($year) {
+        $stats = array();
+        foreach ($this->months($year) as $month => $label) {
+            $record = $this->fetch($year, $month);
+            $record->label = $label;
+            $stats[$month] = $record;
+        }
+        return $stats;
+    }
+
+    function fetch_days($year, $month) {
+        $stats = array();
+        foreach ($this->days($year, $month) as $day => $label) {
+            $record = $this->fetch($year, $month, $day);
+            $record->label = $label;
+            $stats[$day] = $record;
+        }
+        return $stats;
+    }
+
+    function fetch_hours($year, $month, $day) {
+        $stats = array();
+        foreach ($this->hours($year, $month, $day) as $hour => $label) {
+            $record = $this->fetch($year, $month, $day, $hour);
+            $record->label = $label;
+            $stats[$hour] = $record;
+        }
+        return $stats;
+    }
+
+    function fetch_courses($year, $month=false, $day=false, $hour=false) {
+        $courses = array();
+        $select = $this->where($year, $month, $day, $hour, true, false);
+        $records = get_records_select('local_profiling_stats', $select,
+                                      'hits DESC', '*', 0, 10);
+        foreach ($records as $record) {
+            $courses[] = (object) array('name' => $record->course,
+                                        'hits' => (int) $record->hits,
+                                        'time' => (float) $record->time / $record->hits);
+        }
+        return $courses;
+    }
+
+    function fetch_scripts($year, $month=false, $day=false, $hour=false) {
+        $scripts = array();
+        $select = $this->where($year, $month, $day, $hour, false, true);
+        $records = get_records_select('local_profiling_stats', $select,
+                                  'hits DESC', '*', 0, 10);
+        foreach ($records as $record) {
+            $scripts[] = (object) array('name' => $record->script,
+                                        'hits' => (int) $record->hits,
+                                        'time' => (float) $record->time / $record->hits);
+        }
+        return $scripts;
+    }
+
+    function years() {
         global $CFG;
 
-        $select = local_profiling_array_to_select($where);
-        $records = get_records_select('local_profiling_stats', $select,
-                                      $sort, '*', $limitfrom, $limitnum);
-        return $records ? $records : array();
+        $years = array();
+
+        $sql = 'SELECT DISTINCT year'
+            . " FROM {$CFG->prefix}local_profiling_stats"
+            . ' WHERE year IS NOT NULL'
+            . ' GROUP BY year'
+            . ' ORDER BY year ASC';
+        if ($records = get_records_sql($sql)) {
+            foreach ($records as $year => $record) {
+                $years[(int) $year] = "$year";
+            }
+        }
+
+        return $years;
     }
 
-    function time_values($year=false, $month=false, $day=false) {
-        $where = array('year' => $year, 'month' => $month, 'day' => $day,
-                       'hour' => false, 'course' => false, 'script' => false);
-        $field = $day ? 'hour' : ($month ? 'day' : ($year ? 'month' : 'year'));
-        unset($where[$field]);
-        $select = local_profiling_array_to_select($where);
-        $records = get_records_select('local_profiling_stats', $select,
-                                      $field, $field);
-        return array_keys($records);
+    function months($year) {
+        global $CFG;
+
+        $months = array();
+
+        $sql = 'SELECT DISTINCT month'
+            . " FROM {$CFG->prefix}local_profiling_stats"
+            . " WHERE year=$year AND month IS NOT NULL"
+            . ' GROUP BY year, month'
+            . ' ORDER BY month ASC';
+        if ($records = get_records_sql($sql)) {
+            foreach ($records as $month => $record) {
+                $time = mktime(0, 0, 0, $month, 1, $year);
+                $months[(int) $month] = strftime('%B', $time);
+            }
+        }
+
+        return $months;
+    }
+
+    function days($year, $month) {
+        global $CFG;
+
+        $days = array();
+
+        $sql = 'SELECT DISTINCT day'
+            . " FROM {$CFG->prefix}local_profiling_stats"
+            . " WHERE year=$year AND month=$month AND day IS NOT NULL"
+            . ' GROUP BY year, month, day'
+            . ' ORDER BY day ASC';
+
+        if ($records = get_records_sql($sql)) {
+            foreach ($records as $day => $record) {
+                $days[(int) $day] = sprintf("%02d", $day);
+            }
+        }
+
+        return $days;
+    }
+
+    function hours($year, $month, $day) {
+        global $CFG;
+
+        $hours = array();
+
+        $sql = 'SELECT DISTINCT hour'
+            . " FROM {$CFG->prefix}local_profiling_stats"
+            . " WHERE year=$year AND month=$month AND day=$day"
+            . ' AND hour IS NOT NULL'
+            . ' GROUP BY year, month, day, hour'
+            . ' ORDER BY hour ASC';
+
+        if ($records = get_records_sql($sql)) {
+            foreach ($records as $hour => $record) {
+                $hours[(int) $hour] = sprintf("%02d", $hour);
+            }
+        }
+
+        return $hours;
+    }
+
+    function where($year, $month, $day, $hour, $courses=false, $scripts=false) {
+        $where = array($year !== false ? "year=$year" : "year IS NULL",
+                       $month !== false ? "month=$month" : "month IS NULL",
+                       $day !== false ? "day=$day" : "day IS NULL",
+                       $hour !== false ? "hour=$hour" : "hour IS NULL",
+                       $courses !== false ? 'course IS NOT NULL' : "course IS NULL",
+                       $scripts !== false ? 'script IS NOT NULL' : "script IS NULL");
+        return implode(' AND ', $where);
     }
 }
-
 
 function local_profiling_array_to_select($array) {
     $select = array();
@@ -237,7 +307,6 @@ function local_profiling_array_to_select($array) {
     }
     return implode(' AND ', $select);
 }
-
 
 function local_profiling_cron() {
     global $CFG;

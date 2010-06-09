@@ -20,3 +20,4 @@ $string['profiling_script'] = 'Script';
 $string['profiling_time'] = 'Temps';
 $string['profiling_year'] = 'Any';
 $string['settings'] = 'Paràmetres';
+$string['testing_mode'] = 'Mode de proves';

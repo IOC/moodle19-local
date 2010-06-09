@@ -19,6 +19,12 @@ if ($hassiteconfig) {
                                          '', '0')
     );
 
+    $settings->add(
+        new admin_setting_configcheckbox('local_testing_mode',
+                                         get_string('testing_mode', 'local'),
+                                         '', '0')
+    );
+
     $ADMIN->add('local', $settings);
 
     $pages = array('batch', 'errorlog', 'profiling');

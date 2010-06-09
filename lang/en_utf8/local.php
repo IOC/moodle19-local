@@ -20,3 +20,4 @@ $string['profiling_script'] = 'Script';
 $string['profiling_time'] = 'Time';
 $string['profiling_year'] = 'Year';
 $string['settings'] = 'Settings';
+$string['testing_mode'] = 'Testing mode';

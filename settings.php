@@ -14,6 +14,24 @@ if ($hassiteconfig) {
     );
 
     $settings->add(
+        new admin_setting_configtext('local_materials_url',
+                                     get_string('materials_url', 'local'),
+                                     '', '', PARAM_URL)
+    );
+
+    $settings->add(
+        new admin_setting_configtext('local_materials_secret_url',
+                                     get_string('materials_secret_url', 'local'),
+                                     '', '', PARAM_URL)
+    );
+
+    $settings->add(
+        new admin_setting_configtext('local_materials_secret_token',
+                                     get_string('materials_secret_token', 'local'),
+                                     '', '')
+    );
+
+    $settings->add(
         new admin_setting_configcheckbox('local_profiling_enable',
                                          get_string('profiling_enable', 'local'),
                                          '', '0')

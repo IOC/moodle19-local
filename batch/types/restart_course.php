@@ -5,22 +5,22 @@ class batch_type_restart_course extends batch_type_base {
     function execute($params) {
         if (!$course = get_record('course', 'shortname',
                                   addslashes($params->shortname))) {
-            throw new Exception('nonexistent course');
+            throw new Exception('nonexistent');
         }
 
         if (time() - $course->startdate < 30 * 86400) {
-            throw new Exception('course started within last 30 days');
+            throw new Exception('started recently');
         }
-
-        $backup_path = batch_course::backup_course($course->id);
 
         $old_shortname = $course->shortname . '~';
         $old_fullname = $course->fullname . strftime(' ~ %B %G');
 
         if ($old_course = get_record('course', 'shortname',
                                      addslashes($old_shortname))) {
-            batch_course::delete_course($old_course->id);
+            throw new Exception("backup exists");
         }
+
+        $backup_path = batch_course::backup_course($course->id);
 
         batch_course::hide_course($course->id);
         batch_course::rename_course($course->id, $old_shortname, $old_fullname);

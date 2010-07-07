@@ -15,13 +15,11 @@ class batch_view_job_queue extends batch_view_base {
     function _print_table($jobs, $count, $page, $perpage, $filter) {
         global $CFG;
         $table = new flexible_table('queue_table');
-        $columns = array('timecreated' => batch_string('column_timecreated'),
+        $columns = array('timestarted' => batch_string('column_timestarted'),
                          'type' => batch_string('column_type'),
                          'params' => batch_string('column_params'),
-                         'timestarted' => batch_string('column_timestarted'),
-                         'timeended' => batch_string('column_timeended'),
-                         'error' => batch_string('column_error'),
-                         'actions' => '');
+                         'state' => batch_string('column_state'),
+                         'actions' => batch_string('column_action'));
         $table->define_columns(array_keys($columns));
         $table->define_headers(array_values($columns));
         $table->set_attribute('id', 'queue-table');
@@ -33,23 +31,31 @@ class batch_view_job_queue extends batch_view_base {
             $type = batch_type($job->type);
             $strparams = $type->params_info($job->params);
         
-            $timecreated = $this->web->strtime($job->timecreated);
             $timestarted = $this->web->strtime($job->timestarted);
-            $timeended = $this->web->strtime($job->timeended);
 
-            $url = $this->web->url(false, array('cancel_job' => $job->id));
-            $actions = '';
-            if ($job->timestarted == 0) {
-                $actions .= '<a title="' . batch_string('cancel')
-                    . '" href="' . $url->out_action() . '">'
-                    . '<img src="' . $CFG->pixpath . '/t/delete.gif" '
-                    .'class="iconsmall edit" alt="'
-                    . batch_string('cancel') . '" /></a>';
+            if (!$job->timestarted) {
+                $state = batch_string('state_waiting');
+            } elseif (!$job->timeended) {
+                $state = batch_string('state_executing');
+            } elseif ($job->error) {
+                $state = batch_string('state_error', $job->error);
+            } else {
+                $seconds = $job->timeended - $job->timestarted;
+                $duration = ($seconds > 60 ? round((float) $seconds / 60) . 'm'
+                             : $seconds . 's');
+                $state = batch_string('state_finished', $duration);
             }
 
-            $table->add_data(array($timecreated, $strtype, $strparams,
-                                   $timestarted, $timeended, $job->error,
-                                   $actions));
+            $url = $this->web->url(false, array('cancel_job' => $job->id));
+            $action = '';
+            if ($job->timestarted == 0) {
+                $action .= '<a href="' . $url->out_action() . '"'
+                    . ' title="' . batch_string('cancel') . '">'
+                    . batch_string('cancel') . '</a>';
+            }
+
+            $table->add_data(array($timestarted, $strtype, $strparams,
+                                   $state, $action));
         }
 
         $table->print_html();

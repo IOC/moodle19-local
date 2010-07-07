@@ -106,7 +106,7 @@ class batch_web {
     }
 
     function strtime($time) {
-        return $time ? strftime("%Y-%m-%d %H:%M:%S", $time) : '';
+        return $time ? strftime("%e %B, %R", $time) : '';
     }
 
     function url($view=false, $params=array()) {

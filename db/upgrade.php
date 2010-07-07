@@ -13,7 +13,8 @@ function xmldb_local_upgrade($oldversion) {
                    'forum' => 'scale',
                    'glossary' => 'scale',
                    'journal' => 'assessed',
-                   'questionnaire_quest_choice' => 'question_id');
+                   'questionnaire_quest_choice' => 'question_id',
+                   'local_batch_job' => 'timecreated');
     foreach ($index as $table => $field) {
         $table = new XMLDBTable($table);
         $index = new XMLDBIndex($field);

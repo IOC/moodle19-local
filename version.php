@@ -1,3 +1,3 @@
 <?php
 
-$local_version = 2010052801;
+$local_version = 2010070700;

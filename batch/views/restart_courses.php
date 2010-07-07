@@ -12,8 +12,8 @@ class batch_view_restart_courses extends batch_view_base {
             }
 
             $category = (int) $data['category'];
-            $delete_groups = (bool) $data['delete_groups'];
-            $delete_all_ra = (bool) $data['delete_all_role_assignments'];
+            $delete_groups = !empty($data['delete_groups']);
+            $delete_all_ra = !empty($data['delete_all_role_assignments']);
 
             if ($match and checkdate($startmonth, $startday, $startyear)) {
                 foreach ($data as $name => $value) {

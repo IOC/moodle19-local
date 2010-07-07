@@ -26,6 +26,7 @@ $string['ok'] = 'D\'acord';
 $string['parameters'] = 'Paràmetres';
 $string['params_delete_course'] = 'Curs: $a->shortname';
 $string['params_restart_course'] = 'Curs: $a->shortname<br/>Data: $a->startday/$a->startmonth/$a->startyear';
+$string['retry'] = 'Reintenta';
 $string['start_date'] = 'Data d\'inici';
 $string['state_error'] = 'Error: $a';
 $string['state_executing'] = 'Executant-se';

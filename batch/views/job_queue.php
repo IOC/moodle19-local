@@ -47,14 +47,18 @@ class batch_view_job_queue extends batch_view_base {
                 $state = batch_string('state_finished', $duration);
             }
 
-            $url = $this->web->url(false, array('cancel_job' => $job->id));
             $action = '';
             if ($job->timestarted == 0) {
+                $url = $this->web->url(false, array('cancel_job' => $job->id));
                 $action .= '<a href="' . $url->out_action() . '"'
                     . ' title="' . batch_string('cancel') . '">'
                     . batch_string('cancel') . '</a>';
+            } elseif ($job->timeended > 0 and $job->error) {
+                $url = $this->web->url(false, array('retry_job' => $job->id));
+                $action .= '<a href="' . $url->out_action() . '"'
+                    . ' title="' . batch_string('retry') . '">'
+                    . batch_string('retry') . '</a>';
             }
-
             $table->add_data(array($timestarted, $strtype, $strparams,
                                    $state, $action));
         }
@@ -66,6 +70,7 @@ class batch_view_job_queue extends batch_view_base {
 
     function view() {
         $cancel_job = optional_param('cancel_job', 0, PARAM_INT);
+        $retry_job = optional_param('retry_job', 0, PARAM_INT);
         $filter = optional_param('filter', batch_queue::FILTER_ALL,
                                  PARAM_INT);
         $page = optional_param('page', 0, PARAM_INT);
@@ -76,6 +81,12 @@ class batch_view_job_queue extends batch_view_base {
         if ($cancel_job) {
             $this->web->require_sesskey();
             batch_queue::cancel_job($cancel_job);
+            $this->web->redirect();
+        }
+
+        if ($retry_job) {
+            $this->web->require_sesskey();
+            batch_queue::retry_job($retry_job);
             $this->web->redirect();
         }
 

@@ -137,6 +137,14 @@ class batch_queue {
 
         return $jobs;
     }
+
+    function retry_job($id) {
+        if ($job = self::get_job($id)) {
+            if ($job->error) {
+                self::add_job($job->type, $job->params);
+            }
+        }
+    }
 }
 
 function batch_cron() {

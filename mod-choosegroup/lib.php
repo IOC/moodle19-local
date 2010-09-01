@@ -1,142 +1,57 @@
 <?php
 
-class choosegroup {
+function groups_assigned($choosegroup) {
+    global $COURSE;
 
-    const TYPE_GROUP = 0;
-    const TYPE_SUBGROUP = 1;
-    const PATTERN_GROUP = '/^([A-Z]):/';
-    const PATTERN_SUBGROUP = '/^([A-Z])[1-9]:/';
-
-    function __construct($record, $cm, $userid) {
-        $this->cm = $cm;
-        $this->id = $record->id;
-        $this->courseid = $record->course;
-        $this->name = $record->name;
-        $this->intro = $record->intro;
-        $this->type = $record->type;
-        $this->grouplimit = $record->grouplimit;
-        $this->timeopen = $record->timeopen;
-        $this->timeclose = $record->timeclose;
-        $this->userid = $userid;
-        $this->groups = $this->_groups();
-        $this->usergroup = $this->_user_group();
-        $this->subgroups = $this->_subgroups();
-        $this->usersubgroup = $this->_user_subgroup();
+    $groupsok = get_field('choosegroup', 'groups', 'course', $COURSE->id);
+    if (!empty($groupsok)) {
+        $groupsok = explode(',', $groupsok);
+    }
+    else{
+        $groupsok = array();
     }
 
-    function _groups() {
-        $records = get_records('groups', 'courseid', $this->courseid, 'name');
-        if (!$records) {
-            return false;
-        }
-
-        $groups = array();
-        foreach ($records as $record) {
-            if (preg_match(self::PATTERN_GROUP, $record->name, &$matches)) {
-                $record->letter = $matches[1];
-                $record->members = count_records('groups_members',
-                                                 'groupid', $record->id);
-                $record->vacancies = max(0, $this->grouplimit
-                                         - $record->members);
-                $groups[$record->id] = $record;
-            }
-        }
-        return $groups;
-    }
-
-    function _subgroups() {
-        if (!$this->usergroup) {
-            return false;
-        }
-
-        $records = get_records('groups', 'courseid', $this->courseid, 'name');
-        if (!$records) {
-            return false;
-        }
-
-        $subgroups = array();
-        foreach ($records as $record) {
-            if (preg_match(self::PATTERN_SUBGROUP, $record->name, &$matches)) {
-                if ($matches[1] == $this->usergroup->letter) {
-                    $subgroups[$record->id] = $record;
-                    $record->members = count_records('groups_members',
-                                                     'groupid', $record->id);
-                    $record->vacancies = max(0, $this->grouplimit
-                                             - $record->members);
-                }
-            }
-        }
-        return $subgroups;    
-    }
-
-    function _user_group() {
-        if (!$this->groups) {
-            return false;
-        }
-
-        foreach ($this->groups as $group) {
-            if (record_exists('groups_members', 'groupid', $group->id,
-                              'userid', $this->userid)) {
-                return $group;
-            }
-        }
+    if (!$records = get_records('groups', 'courseid', $choosegroup->course, 'name')) {
         return false;
     }
 
-    function _user_subgroup() {
-        if (!$this->subgroups) {
-            return false;
+    $groups = array();
+    foreach ($records as $record) {
+        if (in_array($record->id, $groupsok)){
+            $record->members = count_records('groups_members',
+                                             'groupid', $record->id);
+            $record->vacancies = max(0, $choosegroup->grouplimit - $record->members);
+            $groups[$record->id] = $record;
         }
+    }
+    return $groups;
+}
 
-        foreach ($this->subgroups as $subgroup) {
-            if (record_exists('groups_members', 'groupid', $subgroup->id,
-                              'userid', $this->userid)) {
-                return $subgroup;
-            }
-        }
+function choose($choosegroup, $groups, $groupid, $currentgroup) {
+    global $COURSE, $USER;
 
-        return false;
+    if (!confirm_sesskey()){
+        return;
     }
 
-    function can_choose() {
-        $context = get_context_instance(CONTEXT_MODULE, $this->cm->id);
-        return has_capability('mod/choosegroup:choose', $context, null, false);
+    if (!$groups or !isset($groups[$groupid])) {
+        return;
     }
 
-    function chosen() {
-        return ($this->type == self::TYPE_GROUP and $this->usergroup)
-            or ($this->type == self::TYPE_SUBGROUP and $this->usersubgroup);
+    if ($choosegroup->grouplimit &&
+    $groups[$groupid]->members >= $choosegroup->grouplimit) {
+        return;
     }
 
-    function choose($groupid) {
-        $groups = false;        
-        if ($this->type == self::TYPE_GROUP and !$this->usergroup) {
-            $groups = $this->groups;
-        } elseif ($this->type == self::TYPE_SUBGROUP
-                  and !$this->usersubgroup) {
-            $groups = $this->subgroups;
-        }
-
-        if (!$groups or !isset($groups[$groupid])) {
-            return;
-        }
-
-        if ($this->grouplimit and
-            $groups[$groupid]->members >= $this->grouplimit) {
-            return;
-        }
-
-        $record = (object) array('groupid' => $groupid,
-                                 'userid' => $this->userid,
-                                 'timeadded' => time());
-        insert_record('groups_members', $record);
+    //Firstly remove previous group assignment
+    if ($currentgroup) {
+        delete_records('groups_members', 'groupid', $currentgroup->id, 'userid', $USER->id);
     }
 
-    function is_open() {
-        return (!$this->timeopen or $this->timeopen <= time())
-            and (!$this->timeclose or $this->timeclose > time());
-    }
-
+    $record = (object) array('groupid' => $groupid,
+                             'userid' => $USER->id,
+                             'timeadded' => time());
+    insert_record('groups_members', $record);
 }
 
 function choosegroup_add_instance($record) {
@@ -156,17 +71,7 @@ function choosegroup_detected_groups($courseid) {
     if (!$records) {
         return array();
     }
-
-    $groups = array();
-    foreach ($records as $record) {
-        if (preg_match(choosegroup::PATTERN_GROUP,
-                       $record->name, &$matches)
-            or preg_match(choosegroup::PATTERN_SUBGROUP,
-                          $record->name, &$matches)) {
-            $groups[] = $record->name;
-        }
-    }
-    return $groups;
+    return $records;
 }
 
 function choosegroup_update_instance($record) {
@@ -174,6 +79,106 @@ function choosegroup_update_instance($record) {
     $record->grouplimit = max(0, min(9999, $record->grouplimit));
     $record->timemodified = time();
 
+    $groups = choosegroup_detected_groups($record->course);
+    $groupsid = '';
+    foreach ($groups as $group){
+        $name = "group$group->id";
+        if (isset($record->$name) && $record->$name) {
+            if (!empty($groupsid)){
+                $groupsid .= ",$group->id";
+            } else {
+                $groupsid = "$group->id";
+            }
+        }
+    }
+    $record->groups = $groupsid;
     return update_record('choosegroup', $record);
 }
 
+function chosen($groups){
+    global $USER;
+    $info = new stdClass();
+    foreach ($groups as $id=>$group){
+        if(record_exists('groups_members','groupid', $id, 'userid', $USER->id)) {
+            $info->id = $id;
+            $info->name = $group->name;
+            return $info;
+        }
+    }
+    return false;
+}
+
+function print_form($groups, $message, $choosegroup, $url, $groupid = false) {
+    if (empty($groups)) {
+        print_string('nogroups', 'choosegroup');
+    } else {
+        echo '<div class="choosegroup_left"><b>' . get_string($message, 'choosegroup') . ':</b></div>';
+        if ($choosegroup->showmembers < CHOOSEGROUP_AFTER) {
+            echo '<div class="choosegroup_right"><b>' . get_string('groupmembers', 'choosegroup') . ':</b></div>';
+        }
+        echo '<div class="choosegroup_clear"></div>';
+        echo '<form method="post" action="' . s($url->out()) . '">'
+        . '<input type="hidden" name="sesskey" value="'
+        . sesskey() . '"/>';
+        foreach ($groups as $group) {
+            $vacancies = '';
+            $disabled = '';
+            $dimmed = '';
+            if ($choosegroup->grouplimit) {
+                if (!$group->vacancies) {
+                    $disabled = 'disabled="disabled"';
+                    $dimmed = 'class="dimmed"';
+                    $vacancies = '(' .  get_string('novacancies', 'choosegroup'). ')';
+                }
+                else if ($group->vacancies > 1) {
+                    $vacancies = '(' .  get_string('vacancies', 'choosegroup',
+                    $group->vacancies) . ')';
+                } else {
+                    $vacancies = '(' .  get_string('vacancy', 'choosegroup',
+                    $group->vacancies) . ')';
+                }
+            }
+            	
+            if ($groupid && $group->id === $groupid) {
+                $disabled = 'disabled="disabled"';
+                $dimmed = 'class="dimmed"';
+                $vacancies = '(' . get_string('currentgroup', 'choosegroup') . ')';
+            }
+            	
+            $checkbox = "<input $disabled type=\"radio\" name=\"group\" "
+            . "id=\"group-{$group->id}\" value=\"{$group->id}\" />";
+            $label = "<label $dimmed for=\"group-{$group->id}\">"
+            . s($group->name) . " $vacancies</label>";
+            $members = '';
+            $hr = '';
+            if ($choosegroup->showmembers < CHOOSEGROUP_AFTER) {
+                $members = show_members($group->id);
+                $hr ='<hr />';
+            }
+            echo "<div class=\"choosegroup_left\">$checkbox $label</div> $members";
+            echo "<div class=\"choosegroup_clear\">$hr</div>";
+        }
+        echo '<input type="submit" value="' . get_string('submit') . '"/>'
+        .'</form>';
+    }
+}
+
+function show_members($groupid, $class='users-group') {
+    global $CFG, $COURSE;
+
+    $members = get_records('groups_members', 'groupid', $groupid, null, 'userid');
+    echo '<div class="'.$class.'">';
+    if (!empty($members)) {
+        foreach ($members as $member) {
+            $user = get_record('user','id',$member->userid);
+            echo '<div class="user-group">';
+            print_user_picture($user, $COURSE->id);
+            echo '<a href="'.$CFG->wwwroot.'/user/view.php?id='.$user->id.'&amp;course='.$COURSE->id.'">'.fullname($user).'</a>';
+            echo '</div>';
+        }
+    } else {
+        print_string('nomembers', 'choosegroup');
+    }
+    echo '<div class="choosegroup_clear"></div>';
+    echo "</div>";
+}

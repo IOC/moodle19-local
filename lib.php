@@ -35,6 +35,11 @@ function local_course_edit_form($id, $mform) {
     $choices['1'] = get_string('yes');
     $mform->addElement('select', 'local_restrictemail',
                        "Prohibeix entre alumnes", $choices);
+
+    if ($id) {
+        $record = local_course_record($id);
+        $mform->setDefault('local_restrictemail', $record->restrictemail);
+    }
 }
 
 function local_course_record($id) {

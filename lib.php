@@ -71,6 +71,11 @@ function local_course_update($id, $data) {
     update_record('local_course', $record);
 }
 
+function local_login($userid, $password, $urltogo) {
+    $validpassword = (int) check_password_policy($password);
+    set_user_preference('local_validpassword', $validpassword, $userid);
+}
+
 function local_raise_resource_limits() {
     global $CFG;
 

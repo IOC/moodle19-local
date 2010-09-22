@@ -3,7 +3,7 @@
 function groups_assigned($choosegroup) {
     global $COURSE;
 
-    $groupsok = get_field('choosegroup', 'groups', 'course', $COURSE->id);
+    $groupsok = get_field('choosegroup', 'groups', 'id', $choosegroup->id, 'course', $COURSE->id);
     if (!empty($groupsok)) {
         $groupsok = explode(',', $groupsok);
     }
@@ -58,7 +58,7 @@ function choosegroup_add_instance($record) {
     $record->grouplimit = max(0, min(9999, $record->grouplimit));
     $record->timecreated = time();
     $record->timemodified = time();
-
+    $record->groups = choosegroup_prepare_groups($record);
     return insert_record('choosegroup', $record);
 }
 
@@ -78,7 +78,11 @@ function choosegroup_update_instance($record) {
     $record->id = $record->instance;
     $record->grouplimit = max(0, min(9999, $record->grouplimit));
     $record->timemodified = time();
+    $record->groups = choosegroup_prepare_groups($record);
+    return update_record('choosegroup', $record);
+}
 
+function choosegroup_prepare_groups($record) {
     $groups = choosegroup_detected_groups($record->course);
     $groupsid = '';
     foreach ($groups as $group){
@@ -91,8 +95,7 @@ function choosegroup_update_instance($record) {
             }
         }
     }
-    $record->groups = $groupsid;
-    return update_record('choosegroup', $record);
+    return $groupsid;
 }
 
 function chosen($groups){

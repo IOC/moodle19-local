@@ -11,11 +11,13 @@ require_once($CFG->dirroot . '/grade/querylib.php');
 
 //Comprovar si el servidor està fent servir SSL
 if (!isset($_SERVER['HTTPS'])) {
-    return false;
+    die;
 }
 
 //Contrasenya per poder fer servir el webservice
-//$clau = get_config('', 'local_webservice_password');
+if (empty($CFG->local_webservice_password)) {
+    die;
+}
 $clau = $CFG->local_webservice_password;
 
 $data = stripslashes($_POST['data']);
@@ -23,7 +25,7 @@ $data = json_decode($data);
 
 //Comprovar si la clau es correcte
 if ($data->pass !== $clau) {
-    return false;
+    die;
 }
 
 //Funcions valides

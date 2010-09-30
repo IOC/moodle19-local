@@ -12,7 +12,6 @@ $string['othercourses'] = 'Altres cursos...';
 $string['profiling'] = 'Profiling';
 $string['profiling_course'] = 'Curs';
 $string['profiling_day'] = 'Dia';
-$string['profiling_enable'] = 'Habilita profiling';
 $string['profiling_hits'] = 'Peticions';
 $string['profiling_hour'] = 'Hora';
 $string['profiling_month'] = 'Mes';

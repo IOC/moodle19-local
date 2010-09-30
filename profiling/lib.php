@@ -52,7 +52,7 @@ class local_profiling {
 
     static function shutdown() {
         global $CFG, $LOCAL_PROFILING;
-        if (!empty($CFG->local_profiling_enable)) {
+        if (empty($CFG->local_profiling_disable)) {
             $LOCAL_PROFILING->log();
         }
     }

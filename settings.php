@@ -32,12 +32,6 @@ if ($hassiteconfig) {
     );
 
     $settings->add(
-        new admin_setting_configcheckbox('local_profiling_enable',
-                                         get_string('profiling_enable', 'local'),
-                                         '', '0')
-    );
-
-    $settings->add(
         new admin_setting_configcheckbox('local_testing_mode',
                                          get_string('testing_mode', 'local'),
                                          '', '0')

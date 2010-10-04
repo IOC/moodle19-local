@@ -72,7 +72,7 @@ function local_course_update($id, $data) {
 }
 
 function local_login($userid, $password, $urltogo) {
-    $validpassword = (int) check_password_policy($password);
+    $validpassword = (int) check_password_policy($password, $errormsg);
     set_user_preference('local_validpassword', $validpassword, $userid);
 }
 

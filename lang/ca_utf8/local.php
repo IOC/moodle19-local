@@ -9,6 +9,12 @@ $string['errorlog_refresh'] = 'Refresca';
 $string['local'] = 'Local';
 $string['local:enrolled'] = 'Inscrit';
 $string['othercourses'] = 'Altres cursos...';
+$string['passwordpolicy'] = 'Normativa de contrasenyes';
+$string['passwordpolicy_message'] = 'Degut a una revisió en les polítiques de seguretat'
+    . ' del campus, s\'està comprovant la robustesa de les contrasenyes dels usuaris, i'
+    . ' s\'ha detectat que la vostra contrasenya no és prou segura. Hauríeu de canviar-la.';
+$string['passwordpolicy_message2'] = 'El canvi de contrasenya no és obligatori,'
+    . ' però sí molt recomanable. Si voleu podeu continuar treballant al campus.';
 $string['profiling'] = 'Profiling';
 $string['profiling_course'] = 'Curs';
 $string['profiling_day'] = 'Dia';

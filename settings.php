@@ -37,6 +37,12 @@ if ($hassiteconfig) {
                                          '', '0')
     );
 
+    $settings->add(
+        new admin_setting_configcheckbox('local_passwordpolicy',
+                                         get_string('passwordpolicy', 'local'),
+                                         '', '0')
+    );
+
     $ADMIN->add('local', $settings);
 
     $pages = array('batch', 'errorlog', 'profiling');

@@ -72,8 +72,30 @@ function local_course_update($id, $data) {
 }
 
 function local_login($userid, $password, $urltogo) {
-    $validpassword = (int) check_password_policy($password, $errormsg);
+    global $CFG;
+    $strerror = '';
+    $validpassword = (int) check_password_policy($password, $strerror);
     set_user_preference('local_validpassword', $validpassword, $userid);
+    if (!$validpassword && !empty($CFG->local_passwordpolicy)) {
+        $site = get_site();
+        $strchangepassword = get_string('changepassword');
+        $strcontinue = get_string('continue');
+        $navlinks = array(array('name' => $strchangepassword, 'link' => null, 'type' => 'misc'));
+        $navigation = build_navigation($navlinks);
+        $strcontent = '<div class="subcontent">'
+            . '<p>' . get_string('passwordpolicy_message','local') . '</p>'
+            . print_single_button($CFG->wwwroot . '/login/change_password.php',
+                                  null, $strchangepassword,'get','',true)
+            . '<div class="guestsub subcontent">'
+            . '<p>' . get_string('passwordpolicy_message2','local') . '</p>'
+            . print_continue($urltogo,  true)
+            . '</div></div>';
+        print_header($site->fullname, $site->fullname, $navigation, '', '', true);
+        print_heading(get_string('passwordpolicy','local'));
+        print_box($strcontent, "loginbox");
+        print_footer();
+        die;
+    }
 }
 
 function local_raise_resource_limits() {

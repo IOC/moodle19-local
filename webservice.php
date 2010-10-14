@@ -64,10 +64,12 @@ function NotesActivitats($shortname, $module, $usersids){
     $i = 0;
     foreach ($activitats as $cm)
     {
-        $activities[$i] = array('visible' => $cm->visible, 'name' => $cm->name);
-        $activities[$i]['notes'] = array();
+       //$activities[$i] = array('visible' => $cm->visible, 'name' => $cm->name);
+	$activities[$i]['visible'] = $cm->visible;
+	$activities[$i]['name'] = $cm->name;
+       $activities[$i]['notes'] = array();
 
-        $items = grade_get_grade_items_for_activity($cm);
+       $items = grade_get_grade_items_for_activity($cm);
         foreach ($items as $item)
         {
             $grade_grade = new grade_grade();
@@ -110,10 +112,10 @@ function QualificacionsCursCategories($courseid, $userids){
 
             $item = $category->get_grade_item();
             $grades = $grade_grade->fetch_users_grades($item, $userids);
-            $activitats_modul[$category->id]['nom'] = utf8_decode(str_replace("'","´",$category->get_name()));
+            $activitats_modul[$category->id]['nom'] = $category->get_name();
             if ($category->is_course_category())
             {
-              $activitats_modul[$category->id]['nom'] = "Global: ".$activitats_modul[$category->id]['nom'];
+				$activitats_modul[$category->id]['nom'] = "Global: ".$activitats_modul[$category->id]['nom'];
             }
             foreach ($grades as $userid => $grade)
             {
@@ -129,7 +131,7 @@ function QualificacionsCursCategories($courseid, $userids){
                {
                    $qualificacions_global[$userid] = $nota;
                }
-   	    } //grades*/
+            } //grades
 
      } // Categories
 
@@ -150,7 +152,7 @@ function QualificacionsCursActivitats($courseid, $module, $userids){
         $items = grade_get_grade_items_for_activity($cm);
         foreach ($items as $item) {
             if ($cm->visible != "0"){
-              $activitats_modul[$cm->id]['nom'] = utf8_decode(str_replace("'","´",$cm->name));
+              $activitats_modul[$cm->id]['nom'] = $cm->name;
               //$activitats_modul[$cm->id]['nota_max'] = round(grade_format_gradevalue($grade->rawgrademax, $item));
               $activitats_modul[$cm->id]['nota_max'] = round(grade_format_gradevalue(null, $item));
               $grades = $grade_grade->fetch_users_grades($item, $userids);

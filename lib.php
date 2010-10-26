@@ -73,6 +73,10 @@ function local_course_update($id, $data) {
 
 function local_login($userid, $password, $urltogo) {
     global $CFG;
+
+    $ie6 = (strpos($_SERVER['HTTP_USER_AGENT'], 'MSIE 6.') !== FALSE);
+    set_user_preference('local_ie6', (int) $ie6, $userid);
+
     $strerror = '';
     $validpassword = (int) check_password_policy($password, $strerror);
     set_user_preference('local_validpassword', $validpassword, $userid);

@@ -42,7 +42,7 @@ class mod_choosegroup_mod_form extends moodleform_mod {
 
         $options = array('before', 'after', 'closed', 'never');
         foreach ($options as $key=>$option) {
-        	$options[$key] = get_string("showresults:$option", 'choosegroup', get_string('modulename', 'choosegroup'));
+        	$options[$key] = get_string("showresults:$option", 'choosegroup');
         }                   
 		$mform->addElement('select', 'showmembers', get_string('showmembers', 'choosegroup'), $options);
 		$mform->setDefault('showmembers', count($options)-1);
@@ -51,6 +51,10 @@ class mod_choosegroup_mod_form extends moodleform_mod {
 		$mform->addElement('selectyesno', 'allowupdate', get_string("allowupdate", "choosegroup"));
 		$mform->setDefault('allowupdate', 0);
 		$mform->setHelpButton('allowupdate', array('allowupdate', get_string('allowupdate','choosegroup'), 'choosegroup'));
+
+		$mform->addElement('selectyesno', 'shownames', get_string("shownames", "choosegroup"));
+		$mform->setDefault('shownames', 0);
+		$mform->setHelpButton('shownames', array('shownames', get_string('shownames','choosegroup'), 'choosegroup'));
 		
         /**********************************************************************************/
 

@@ -108,14 +108,18 @@ if ($can_choose) {
             print_form($groups,'chooseagroup', $choosegroup, $url, $chosen->id);
             if ($choosegroup->showmembers == CHOOSEGROUP_AFTER){
                 echo '<p class="choosegroup_center"><u>'.get_string('owngroupmembers', 'choosegroup', $chosen->name).'</u></p>';
-                show_members($chosen->id, 'show-users-group');
+                show_members($chosen->id, $choosegroup->shownames, 'show-users-group');
             }
         } else {
             echo '<p>'.get_string('groupchosen', 'choosegroup', $chosen->name).'</p>';
             if (($is_open && $choosegroup->showmembers < CHOOSEGROUP_CLOSED) ||
             (!$is_open && $choosegroup->showmembers < CHOOSEGROUP_NEVER)) {
                 echo '<p class="choosegroup_center"><u>'.get_string('owngroupmembers', 'choosegroup', $chosen->name).'</u></p>';
-                show_members($chosen->id, 'show-users-group');
+                if ($choosegroup->shownames){
+                  show_members_col($chosen->id);  
+                } else {
+                    show_members($chosen->id, $choosegroup->shownames, 'user-col');
+                }
             }
         }
     } else {

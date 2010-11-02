@@ -155,7 +155,7 @@ function print_form($groups, $message, $choosegroup, $url, $groupid = false) {
             $members = '';
             $hr = '';
             if ($choosegroup->showmembers < CHOOSEGROUP_AFTER) {
-                $members = show_members($group->id);
+                $members = show_members($group->id, $choosegroup->shownames);
                 $hr ='<hr />';
             }
             echo "<div class=\"choosegroup_left\">$checkbox $label</div> $members";
@@ -166,22 +166,69 @@ function print_form($groups, $message, $choosegroup, $url, $groupid = false) {
     }
 }
 
-function show_members($groupid, $class='users-group') {
+function show_members($groupid, $shownames, $class='users-group') {
     global $CFG, $COURSE;
 
-    $members = get_records('groups_members', 'groupid', $groupid, null, 'userid');
+    $members = get_fieldset_select('groups_members', 'userid', 'groupid = '. $groupid);    
     echo '<div class="'.$class.'">';
     if (!empty($members)) {
-        foreach ($members as $member) {
-            $user = get_record('user','id',$member->userid);
-            echo '<div class="user-group">';
+        $userids = implode(",", $members);
+        $rs = get_recordset_list('user', 'id', $userids, 'lastname');
+        while ($user = rs_fetch_next_record($rs)) {
+            $class = ($shownames)?'user-group-names':'user-group';            
+            echo '<div class="'.$class.'">';
             print_user_picture($user, $COURSE->id);
-            echo '<a href="'.$CFG->wwwroot.'/user/view.php?id='.$user->id.'&amp;course='.$COURSE->id.'">'.fullname($user).'</a>';
+            if ($shownames) {
+                echo '<a href="'.$CFG->wwwroot.'/user/view.php?id='.$user->id.'&amp;course='.$COURSE->id.'">'.fullname($user).'</a>';
+            }
             echo '</div>';
         }
+        rs_close($rs);
     } else {
         print_string('nomembers', 'choosegroup');
     }
     echo '<div class="choosegroup_clear"></div>';
     echo "</div>";
+}
+
+function show_members_col($groupid) {
+    global $CFG, $COURSE;
+    
+    $position = 0;
+    $col1 = '';
+    $col2 = '';
+    $col3 = '';
+    
+    $members = get_fieldset_select('groups_members', 'userid', 'groupid = '. $groupid);
+    if (!empty($members)) {
+        $userids = implode(",", $members);
+        $rs = get_recordset_list('user', 'id', $userids, 'lastname');
+        while ($user = rs_fetch_next_record($rs)) {
+            $txt = '<div class="user-col">'
+                   .'<div class="user-col-pic">'
+                   .print_user_picture($user, $COURSE->id, null, 0, true)
+                   .'</div>'
+                   .'<div class="user-col-name">'
+                   .'<a href="'.$CFG->wwwroot.'/user/view.php?id='.$user->id.'&amp;course='.$COURSE->id.'">'.fullname($user,true).'</a>'
+                   .'</div>'
+                   .'</div>'
+                   .'<div class="choosegroup_clear"></div>';
+            $position += 1;
+            if ($position === 1) {
+                  $col1 .= $txt;  
+            } elseif ($position === 2) {
+                  $col2 .= $txt;  
+            } else {
+                  $col3 .= $txt;
+                  $position = 0;
+            }
+        }
+        rs_close($rs);
+        echo '<div class="user-group-col">'.$col1.'</div>';
+        echo '<div class="user-group-col">'.$col2.'</div>';
+        echo '<div class="user-group-col">'.$col3.'</div>';
+    } else {
+        print_string('nomembers', 'choosegroup');
+    }
+    echo '<div class="choosegroup_clear"></div>';
 }

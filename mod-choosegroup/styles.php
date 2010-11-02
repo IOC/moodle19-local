@@ -56,9 +56,31 @@ clear: both;
 }
 
 .user-group{
+float: left;
+position: relative;
+}
+
+.user-group-names{
 width:150px;
 padding-bottom: 3px;
 float: left;
 position: relative;
 }
+
+.user-col{
+width:100%;
+}
+
+.user-col-pic{
+float:left;
+}
+.user-col-name{
+overflow:hidden;
+}
+
+.user-group-col{
+float:left;
+width:33%;
+}
+
 

@@ -31,10 +31,9 @@ class mod_choosegroup_mod_form extends moodleform_mod {
                            array('size' => 4));
         $mform->setType('grouplimit', PARAM_INT);
         $mform->setDefault('grouplimit', 0);
-        
+
         $mform->setHelpButton('grouplimit', array('grouplimit', get_string('grouplimit','choosegroup'), 'choosegroup'));
 
-        
         $mform->addElement('date_time_selector', 'timeopen', get_string('timeopen', 'choosegroup'), array('optional'=>true));
         $mform->setDefault('timeopen', time());
         $mform->addElement('date_time_selector', 'timeclose', get_string('timeclose', 'choosegroup'), array('optional'=>true));
@@ -42,58 +41,57 @@ class mod_choosegroup_mod_form extends moodleform_mod {
 
         $options = array('before', 'after', 'closed', 'never');
         foreach ($options as $key=>$option) {
-        	$options[$key] = get_string("showresults:$option", 'choosegroup');
-        }                   
-		$mform->addElement('select', 'showmembers', get_string('showmembers', 'choosegroup'), $options);
-		$mform->setDefault('showmembers', count($options)-1);
-		$mform->setHelpButton('showmembers', array('showmembers', get_string('showmembers','choosegroup'), 'choosegroup'));
+            $options[$key] = get_string("showresults:$option", 'choosegroup');
+        }
+        $mform->addElement('select', 'showmembers', get_string('showmembers', 'choosegroup'), $options);
+        $mform->setDefault('showmembers', count($options)-1);
+        $mform->setHelpButton('showmembers', array('showmembers', get_string('showmembers','choosegroup'), 'choosegroup'));
 		
-		$mform->addElement('selectyesno', 'allowupdate', get_string("allowupdate", "choosegroup"));
-		$mform->setDefault('allowupdate', 0);
-		$mform->setHelpButton('allowupdate', array('allowupdate', get_string('allowupdate','choosegroup'), 'choosegroup'));
+        $mform->addElement('selectyesno', 'allowupdate', get_string("allowupdate", "choosegroup"));
+        $mform->setDefault('allowupdate', 0);
+        $mform->setHelpButton('allowupdate', array('allowupdate', get_string('allowupdate','choosegroup'), 'choosegroup'));
 
-		$mform->addElement('selectyesno', 'shownames', get_string("shownames", "choosegroup"));
-		$mform->setDefault('shownames', 0);
-		$mform->setHelpButton('shownames', array('shownames', get_string('shownames','choosegroup'), 'choosegroup'));
+        $mform->addElement('selectyesno', 'shownames', get_string("shownames", "choosegroup"));
+        $mform->setDefault('shownames', 0);
+        $mform->setHelpButton('shownames', array('shownames', get_string('shownames','choosegroup'), 'choosegroup'));
 		
         /**********************************************************************************/
 
-		$mform->addElement('header', 'allowgroups', get_string('groups', 'choosegroup'));
-		$mform->setHelpButton('allowgroups', array('groups', get_string('groups','choosegroup'), 'choosegroup'));
+        $mform->addElement('header', 'allowgroups', get_string('groups', 'choosegroup'));
+        $mform->setHelpButton('allowgroups', array('groups', get_string('groups','choosegroup'), 'choosegroup'));
 		
-		$groups = choosegroup_detected_groups($COURSE->id);
+        $groups = choosegroup_detected_groups($COURSE->id);
 		
-		if (empty($groups)) {
-			$mform->addElement('static', 'description', get_string('nocoursegroups', 'choosegroup'));
-		} else {
-			foreach ($groups as $group){
-				$mform->addElement('advcheckbox', 'group'.$group->id, $group->name, null, array('group' => 1));
-			}
-			$this->add_checkbox_controller(1,null,null);
-		}
-                                   
-		/**********************************************************************************/        
-		$features = new stdClass;
+        if (empty($groups)) {
+            $mform->addElement('static', 'description', get_string('nocoursegroups', 'choosegroup'));
+        } else {
+            foreach ($groups as $group){
+                $mform->addElement('advcheckbox', 'group'.$group->id, $group->name, null, array('group' => 1));
+            }
+            $this->add_checkbox_controller(1,null,null);
+        }
+
+        /**********************************************************************************/
+        $features = new stdClass;
         $features->groups = true;
         $features->groupings = true;
         $features->groupmembersonly = true;
         $this->standard_coursemodule_elements($features);
-       
-        $this->add_action_buttons();
 
+        $this->add_action_buttons();
     }
-    
-	function data_preprocessing(&$default_values) {
-		global $COURSE;
-		$groupsok = get_field('choosegroup', 'groups', 'id', $this->_instance);
-		if (!empty($groupsok)) {
-			$groupsok = explode(',', $groupsok);
-			$groups = choosegroup_detected_groups($COURSE->id);
-	        foreach ($groups as $group) {
-	        	if (in_array($group->id, $groupsok)){
-		        	$default_values['group'.$group->id] = 1;
-	        	}
-	        }
-		}
+
+    function data_preprocessing(&$default_values) {
+        global $COURSE;
+        $groupsok = get_field('choosegroup', 'groups', 'id', $this->_instance);
+        if (!empty($groupsok)) {
+            $groupsok = explode(',', $groupsok);
+            $groups = choosegroup_detected_groups($COURSE->id);
+            foreach ($groups as $group) {
+                if (in_array($group->id, $groupsok)){
+                    $default_values['group'.$group->id] = 1;
+                }
+            }
+        }
     }
 }

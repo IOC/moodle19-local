@@ -82,5 +82,3 @@ overflow:hidden;
 float:left;
 width:33%;
 }
-
-

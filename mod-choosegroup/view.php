@@ -116,7 +116,7 @@ if ($can_choose) {
             (!$is_open && $choosegroup->showmembers < CHOOSEGROUP_NEVER)) {
                 echo '<p class="choosegroup_center"><u>'.get_string('owngroupmembers', 'choosegroup', $chosen->name).'</u></p>';
                 if ($choosegroup->shownames){
-                  show_members_col($chosen->id);  
+                  show_members_col($chosen->id);
                 } else {
                     show_members($chosen->id, $choosegroup->shownames, 'user-col');
                 }

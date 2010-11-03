@@ -169,13 +169,13 @@ function print_form($groups, $message, $choosegroup, $url, $groupid = false) {
 function show_members($groupid, $shownames, $class='users-group') {
     global $CFG, $COURSE;
 
-    $members = get_fieldset_select('groups_members', 'userid', 'groupid = '. $groupid);    
+    $members = get_fieldset_select('groups_members', 'userid', 'groupid = '. $groupid);
     echo '<div class="'.$class.'">';
     if (!empty($members)) {
         $userids = implode(",", $members);
         $rs = get_recordset_list('user', 'id', $userids, 'lastname');
         while ($user = rs_fetch_next_record($rs)) {
-            $class = ($shownames)?'user-group-names':'user-group';            
+            $class = ($shownames)?'user-group-names':'user-group';
             echo '<div class="'.$class.'">';
             print_user_picture($user, $COURSE->id);
             if ($shownames) {
@@ -193,12 +193,12 @@ function show_members($groupid, $shownames, $class='users-group') {
 
 function show_members_col($groupid) {
     global $CFG, $COURSE;
-    
+
     $position = 0;
     $col1 = '';
     $col2 = '';
     $col3 = '';
-    
+
     $members = get_fieldset_select('groups_members', 'userid', 'groupid = '. $groupid);
     if (!empty($members)) {
         $userids = implode(",", $members);
@@ -215,9 +215,9 @@ function show_members_col($groupid) {
                    .'<div class="choosegroup_clear"></div>';
             $position += 1;
             if ($position === 1) {
-                  $col1 .= $txt;  
+                  $col1 .= $txt;
             } elseif ($position === 2) {
-                  $col2 .= $txt;  
+                  $col2 .= $txt;
             } else {
                   $col3 .= $txt;
                   $position = 0;

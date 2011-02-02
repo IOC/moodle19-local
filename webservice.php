@@ -10,9 +10,9 @@ require_once($CFG->dirroot . '/grade/lib.php');
 require_once($CFG->dirroot . '/grade/querylib.php');
 
 //Comprovar si el servidor està fent servir SSL
-if (!isset($_SERVER['HTTPS'])) {
-    die;
-}
+// if (!isset($_SERVER['HTTPS'])) {
+//     die;
+// }
 
 //Contrasenya per poder fer servir el webservice
 if (empty($CFG->local_webservice_password)) {

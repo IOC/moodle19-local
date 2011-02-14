@@ -10,21 +10,34 @@ require_once($CFG->dirroot . '/grade/lib.php');
 require_once($CFG->dirroot . '/grade/querylib.php');
 
 //Comprovar si el servidor està fent servir SSL
-// if (!isset($_SERVER['HTTPS'])) {
-//     die;
-// }
+if (!(isset($_SERVER['HTTPS']) or
+      (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) and
+       $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https'))) {
+    echo 'error https';
+    die;
+}
 
 //Contrasenya per poder fer servir el webservice
 if (empty($CFG->local_webservice_password)) {
+    echo 'error config';
     die;
 }
-$clau = $CFG->local_webservice_password;
+
+if (empty($_POST['data'])) {
+    echo 'error data';
+    die;
+}
 
 $data = stripslashes($_POST['data']);
 $data = json_decode($data);
+if (!$data) {
+    echo 'error json';
+    die;
+}
 
 //Comprovar si la clau es correcte
-if ($data->pass !== $clau) {
+if ($data->pass !== $CFG->local_webservice_password) {
+    echo 'error password';
     die;
 }
 
@@ -36,6 +49,9 @@ static $functions = array ('Cursid', 'EstudiantsCurs', 'NomCurs', 'NotesActivita
 //Si la funció es valida la cridem
 if (in_array($data->func, $functions)){
     echo json_encode(call_user_func_array($data->func,$data->params));
+} else {
+    echo 'error function';
+    die;
 }
 
 /*

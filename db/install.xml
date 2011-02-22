@@ -52,13 +52,6 @@
         <KEY NAME="primary" TYPE="primary" FIELDS="id" NEXT="year_month_day_hour_course_script"/>
         <KEY NAME="year_month_day_hour_course_script" TYPE="unique" FIELDS="year, month, day, hour, course, script" PREVIOUS="primary"/>
       </KEYS>
-      <INDEXES>
-        <INDEX NAME="year_month_day_hour_script" UNIQUE="false" FIELDS="year, month, day, hour, script" NEXT="year_month_day_course_script"/>
-        <INDEX NAME="year_month_day_course_script" UNIQUE="false" FIELDS="year, month, day, course, script" PREVIOUS="year_month_day_hour_script" NEXT="year_month_hour_course_script"/>
-        <INDEX NAME="year_month_hour_course_script" UNIQUE="false" FIELDS="year, month, hour, course, script" PREVIOUS="year_month_day_course_script" NEXT="year_day_hour_course_script"/>
-        <INDEX NAME="year_day_hour_course_script" UNIQUE="false" FIELDS="year, day, hour, course, script" PREVIOUS="year_month_hour_course_script" NEXT="month_day_hour_course_script"/>
-        <INDEX NAME="month_day_hour_course_script" UNIQUE="false" FIELDS="month, day, hour, course, script" PREVIOUS="year_day_hour_course_script"/>
-      </INDEXES>
     </TABLE>
     <TABLE NAME="local_course" COMMENT="-" PREVIOUS="local_profiling_stats" NEXT="local_materials">
       <FIELDS>

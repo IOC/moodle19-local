@@ -23,6 +23,7 @@ function local_course_create($id, $data) {
 }
 
 function local_course_delete($id) {
+    delete_records('course_display', 'course', $id);
     delete_records('local_course', 'course', $id);
     delete_records('local_materials', 'course', $id);
 }

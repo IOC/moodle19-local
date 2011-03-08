@@ -31,7 +31,7 @@ class calc_formula_local {
             try {
                 return $this->_node->evaluate($this->_params);
             } catch (FormulaException $e) {
-                $this->_error = $e->getMessaage();
+                $this->_error = $e->getMessage();
             }
         }
         return false;

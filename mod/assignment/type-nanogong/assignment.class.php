@@ -91,7 +91,7 @@ class assignment_nanogong extends assignment_base {
         echo '<form method="post" action="view.php?id='.$this->cm->id.'">';
         echo '<fieldset class="invisiblefieldset">';
         echo '<input type="hidden" name="id" value="'.$this->cm->id.'" />';
-        echo '<p>' . nanogong_applet('recorder', $file_url, true) . '</p>';
+        echo '<p>' . nanogong_applet('recorder', $file_url, true, false, true) . '</p>';
         echo '<input type="submit" name="save" value="'.get_string('savechanges').'"'
             . " onclick=\"return nanogong_submit('recorder','$upload_url')\" />";
         echo '</fieldset>';
@@ -115,7 +115,7 @@ class assignment_nanogong extends assignment_base {
 
             require_once($CFG->dirroot.'/lib/uploadlib.php');
             if (isset($_FILES['newfile'])) {
-                $_FILES['newfile']['name'] = 'file.wav';
+                $_FILES['newfile']['name'] = 'file.spx';
             }
             $um = new upload_manager('newfile',true,false,$this->course,false);
             if ($um->process_file_uploads($dir)) {
@@ -195,11 +195,11 @@ class assignment_nanogong extends assignment_base {
 
         if ($filearea = $this->file_area_name($userid)) {
             $basedir = $CFG->dataroot . '/' . $filearea;
-            if ($files = get_directory_list($basedir)) {
-                if (in_array('file.wav', $files)) {
-                    return 'file.wav';
-                } elseif (in_array('file.spx', $files)) {
-                    return 'file.spx';
+            $files = get_directory_list($basedir);
+            $files = $files ? $files : array();
+            foreach (array('file.spx', 'file.wav') as $file) {
+                if (in_array($file, $files)) {
+                    return $file;
                 }
             }
         }

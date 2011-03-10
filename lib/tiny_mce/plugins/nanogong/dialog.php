@@ -128,7 +128,7 @@ function _print_directories_menu() {
           <tr>
             <td>&nbsp;</td>
             <td>
-              <?php echo nanogong_applet('recorder', false, true); ?>
+              <?php echo nanogong_applet('recorder', false, true, false, true); ?>
             </td>
           </tr>
           <tr>

@@ -1,7 +1,7 @@
 /* Clearlooks 2 */
 
 /* Reset */
-.clearlooks2, .clearlooks2 div, .clearlooks2 span, .clearlooks2 a {vertical-align:baseline; text-align:left; position:absolute; border:0; padding:0; margin:0; background:transparent; font-family:Arial,Verdana; font-size:13px; color:#000; text-decoration:none; font-weight:normal; width:auto; height:auto; overflow:hidden; display:block}
+.clearlooks2, .clearlooks2 div, .clearlooks2 span, .clearlooks2 a {vertical-align:baseline; text-align:left; position:absolute; border:0; padding:0; margin:0; background:transparent; font-family:Arial,Verdana; font-size:11px; color:#000; text-decoration:none; font-weight:normal; width:auto; height:auto; overflow:hidden; display:block}
 
 /* General */
 .clearlooks2 {position:absolute; direction:ltr}
@@ -40,7 +40,7 @@
 .clearlooks2 .mceStatusbar .mceBottom .mceLeft {background:url(img/corners.gif) -29px 0}
 .clearlooks2 .mceStatusbar .mceBottom .mceCenter {background:url(img/horizontal.gif) 0 -52px}
 .clearlooks2 .mceStatusbar .mceBottom .mceRight {background:url(img/corners.gif) -24px 0}
-.clearlooks2 .mceStatusbar .mceBottom span {display:block; left:7px; font-family:Arial, Verdana; font-size:13px; line-height:23px}
+.clearlooks2 .mceStatusbar .mceBottom span {display:block; left:7px; font-family:Arial, Verdana; font-size:11px; line-height:23px}
 
 /* Actions */
 .clearlooks2 a {width:29px; height:16px; top:3px;}
@@ -87,4 +87,4 @@
 .clearlooks2 .mceAlert .mceIcon {background:url(img/alert.gif)}
 .clearlooks2 .mceConfirm .mceOk {left:50%; top:auto; margin-left: -90px}
 .clearlooks2 .mceConfirm .mceCancel {left:50%; top:auto}
-.clearlooks2 .mceConfirm .mceIcon {background:url(img/confirm.gif)} 
+.clearlooks2 .mceConfirm .mceIcon {background:url(img/confirm.gif)}

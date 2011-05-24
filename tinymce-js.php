@@ -57,6 +57,11 @@ tinyMCE.init({
     },
     font_size_style_values: "8pt,10pt,12pt,14pt,18pt,24pt,36pt",
     file_browser_callback: managefiles ? file_browser_callback : null,
+    paste_preprocess: function(pl, o) {
+        if (/<img[^>]+src="data:/.test(o.content)) {
+            o.content = "";
+        }
+    },
     moodle_courseid: <?php echo $COURSE->id; ?>,
     moodle_wwwroot: "<?php echo $CFG->wwwroot; ?>",
     moodle_wwwmat: "<?php echo $wwwmat;?>",

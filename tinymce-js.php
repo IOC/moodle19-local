@@ -25,9 +25,9 @@ tinyMCE.init({
     theme: "advanced",
     skin: "o2k7",
     skin_variant: "silver",
-    apply_source_formatting:true,
     remove_script_host: false,
     entity_encoding: "raw",
+    extended_valid_elements: "embed[type|width|height|src|*]",
     theme_advanced_fonts: "Trebuchet=Trebuchet MS,Arial,Helvetica,sans-serif;"
         + "Arial=Arial,Helvetica,sans-serif;"
         + "Courier New=Courier New,Courier,monospace;"

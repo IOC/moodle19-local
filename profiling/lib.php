@@ -179,7 +179,7 @@ class local_profiling_stats {
         $courses = array();
         $select = $this->where($year, $month, $day, $hour, true, false);
         $records = get_records_select('local_profiling_stats', $select,
-                                      'hits DESC', '*', 0, 10);
+                                      'hits DESC', '*', 0, 20);
         foreach ($records as $record) {
             $courses[] = (object) array('name' => $record->course,
                                         'hits' => (int) $record->hits,
@@ -192,7 +192,7 @@ class local_profiling_stats {
         $scripts = array();
         $select = $this->where($year, $month, $day, $hour, false, true);
         $records = get_records_select('local_profiling_stats', $select,
-                                  'hits DESC', '*', 0, 10);
+                                  'hits DESC', '*', 0, 20);
         foreach ($records as $record) {
             $scripts[] = (object) array('name' => $record->script,
                                         'hits' => (int) $record->hits,

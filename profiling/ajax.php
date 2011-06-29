@@ -54,13 +54,13 @@ $r = $stats->fetch($data->year, $data->month, $data->day, $data->hour);
 $data->time = $r->time;
 $data->hits = $r->hits;
 
-if ($data->hour) {
+if ($data->hour !== false) {
     $data->context = 'hour';
     $data->chart = false;
-} elseif ($data->day) {
+} elseif ($data->day !== false) {
     $data->context = 'day';
     $data->chart = $stats->fetch_hours($data->year, $data->month, $data->day);
-} elseif ($data->month) {
+} elseif ($data->month !== false) {
     $data->context = 'month';
     $data->chart = $stats->fetch_days($data->year, $data->month);
 } else {

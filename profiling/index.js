@@ -98,13 +98,13 @@ $(document).ready(function() {
 
     var update_hash = function(year, month, day, hour) {
         var hash = "#" + year;
-        if (month) {
+        if (month !== false) {
             hash += "." + month;
         }
-        if (day) {
+        if (day !== false) {
             hash += "." + day;
         }
-        if (hour) {
+        if (hour !== false) {
             hash += "." + hour;
         }
         window.location.hash = hash

@@ -156,13 +156,10 @@ class batch_web {
             return;
         }
 
-        $img = '<img src="' . $CFG->pixpath . '/t/switch_plus.gif" /> '
-            . '<img class="hidden" src="' . $CFG->pixpath
-            . '/t/switch_minus.gif" /> ';
         echo '<ul>';
         foreach ($cat_categories as $category) {
             echo '<li class="category"><span class="title">'
-                . $img . $category->name . '</span>';
+                . $category->name . '</span>';
             $this->_print_tree($categories, $courses, $category->id);
             echo '</li>';
         }

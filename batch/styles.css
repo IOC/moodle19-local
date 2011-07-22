@@ -37,16 +37,27 @@ ul.params input {
     margin-bottom: 10px;
 }
 
-#course-tree > ul {
-    padding-left: 0;
+#course-tree ul {
+    margin-bottom: 0;
 }
 
 #course-tree li {
     list-style: none;
 }
 
-#course-tree li img.hidden {
-    display: none;
+#course-tree li.category {
+    margin: 0.5em 0;
+}
+
+#course-tree li.category span.title {
+    padding-left: 16px;
+    background-repeat: no-repeat;
+    background-position: center left;
+    background-image: url(../../pix/t/switch_minus.gif);
+}
+
+#course-tree li.category span.title.hidden {
+    background-image: url(../../pix/t/switch_plus.gif);
 }
 
 #course-tree li input {

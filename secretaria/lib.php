@@ -39,9 +39,13 @@ class local_secretaria_service {
             return false;
         }
 
-        return $this->moodle->insert_user($properties['username'], $properties['password'],
-                                          $properties['firstname'], $properties['lastname'],
-                                          $properties['email']);
+        return $this->moodle->insert_user(
+            $properties['username'],
+            $properties['password'],
+            $properties['firstname'],
+            $properties['lastname'],
+            $properties['email']
+        );
     }
 
     function update_user($username, $properties) {
@@ -219,14 +223,14 @@ class local_secretaria_service {
     }
 
     function add_group_members($course, $name, $users) {
-        $this->moodle->start_transaction();
-
         if (!$courseid = $this->moodle->get_course_id($course)) {
             return false;
         }
         if (!$groupid = $this->moodle->get_group_id($courseid, $name)) {
             return false;
         }
+
+        $this->moodle->start_transaction();
 
         foreach ($users as $user) {
             $userid = $this->moodle->get_user_id($user);

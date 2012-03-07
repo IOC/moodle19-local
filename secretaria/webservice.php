@@ -35,13 +35,13 @@ try {
     if ($data['token'] !== $CFG->local_webservice_password) {
         throw new local_secretaria_exception('Access denied');
     }
-    if (!is_callable(array($service, $data['func']))) {
-        throw new local_secretaria_exception('Unknown function');
-    }
-    $result = call_user_func_array(array($service, $data['func']), $data['params']);
+    $result = $service->execute($data['func'], $data['params']);
 
 } catch (local_secretaria_exception $e) {
     $error = $e->getMessage();
+
+} catch (Exception $e) {
+    $error = 'Internal error';
 }
 
 echo json_encode(array('result' => $result, 'error' => $error));

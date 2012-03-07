@@ -49,6 +49,16 @@ abstract class local_secretaria_test_base extends UnitTestCase {
             ->with($username)->andReturn($record);
     }
 
+    function service_throws($msg, $func) {
+        $args = array_slice(func_get_args(), 2);
+        try {
+            call_user_func_array(array($this->service, $func), $args);
+            $this->fail();
+        } catch (local_secretaria_exception $e) {
+            $this->assertEqual($e->getMessage(), $msg);
+        }
+    }
+
     function setUp() {
         global $CFG;
         $this->realcfg = $CFG;
@@ -78,6 +88,51 @@ abstract class local_secretaria_test_base extends UnitTestCase {
     }
 }
 
+class local_secretaria_test_valid_param extends local_secretaria_test_base {
+
+    function test_string() {
+        $param = array('type' => 'string');
+        $this->assertTrue($this->service->valid_param($param, 'abc'));
+        $this->assertFalse($this->service->valid_param($param, ''));
+        $this->assertFalse($this->service->valid_param($param, true));
+        $this->assertFalse($this->service->valid_param($param, 123));
+        $this->assertFalse($this->service->valid_param($param, array()));
+    }
+
+    function test_string_optional() {
+        $param = array('type' => 'string', 'optional' => true);
+        $this->assertTrue($this->service->valid_param($param, 'abc'));
+        $this->assertTrue($this->service->valid_param($param, ''));
+    }
+
+    function test_list() {
+        $param = array('type' => 'list', 'of' => array('type' => 'string'));
+        $this->assertTrue($this->service->valid_param($param, array()));
+        $this->assertTrue($this->service->valid_param($param, array('abc', 'def')));
+        $this->assertFalse($this->service->valid_param($param, array('abc', 123)));
+        $this->assertFalse($this->service->valid_param($param, true));
+        $this->assertFalse($this->service->valid_param($param, 123));
+    }
+
+    function test_dictionary() {
+        $param = array('type' => 'dictionary');
+        $this->assertTrue($this->service->valid_param($param, array()));
+        $this->assertTrue($this->service->valid_param($param, array('a' => 'A', 'b' => 'B')));
+        $this->assertFalse($this->service->valid_param($param, array('abc', 'def')));
+        $this->assertFalse($this->service->valid_param($param, array('a' => 1, 'b' => 2)));
+        $this->assertFalse($this->service->valid_param($param, true));
+        $this->assertFalse($this->service->valid_param($param, 123));
+    }
+
+    function test_dictionary_required() {
+        $param = array('type' => 'dictionary', 'required' => array('a', 'b'));
+        $this->assertTrue($this->service->valid_param($param, array('a' => 'A', 'b' => 'B')));
+        $this->assertFalse($this->service->valid_param($param, array()));
+        $this->assertFalse($this->service->valid_param($param, array('a' => 'A')));
+    }
+}
+
+
 /* Users */
 
 class local_secretaria_test_get_user extends local_secretaria_test_base {
@@ -95,7 +150,7 @@ class local_secretaria_test_get_user extends local_secretaria_test_base {
         );
     }
 
-    function test_return_properties_if_user_exists() {
+    function test() {
         $this->having_user_record('user', $this->record);
 
         $result = $this->service->get_user('user');
@@ -109,13 +164,7 @@ class local_secretaria_test_get_user extends local_secretaria_test_base {
         ));
     }
 
-    function test_fail_if_user_does_not_exist() {
-        $result = $this->service->get_user('user');
-
-        $this->assertNull($result);
-    }
-
-    function test_return_null_picture_if_user_does_not_have_one() {
+    function test_no_picture() {
         $this->record->picture = 0;
         $this->having_user_record('user', $this->record);
 
@@ -124,6 +173,9 @@ class local_secretaria_test_get_user extends local_secretaria_test_base {
         $this->assertNull($result['picture']);
     }
 
+    function test_unknown_user() {
+        $this->service_throws('Unknown user', 'get_user', 'user');
+    }
 }
 
 class local_secretaria_test_create_user extends local_secretaria_test_base {
@@ -139,104 +191,23 @@ class local_secretaria_test_create_user extends local_secretaria_test_base {
         );
     }
 
-    function test_insert_user_record() {
+    function test() {
         $this->moodle->shouldReceive('insert_user')
             ->with('user1', 'abc123', 'First', 'Last', 'user1@example.org')
             ->once()->andReturn(true);
-
-        $result = $this->service->create_user($this->properties);
-
-        $this->assertTrue($result);
+        $this->service->create_user($this->properties);
     }
 
-    function test_fail_if_email_is_missing() {
-        unset($this->properties['email']);
-        $result = $this->service->create_user($this->properties);
-        $this->assertFalse($result);
-    }
-
-    function test_fail_if_firstname_is_missing() {
-        unset($this->properties['firstname']);
-        $result = $this->service->create_user($this->properties);
-        $this->assertFalse($result);
-    }
-
-    function test_fail_if_lastname_is_missing() {
-        unset($this->properties['lastname']);
-        $result = $this->service->create_user($this->properties);
-        $this->assertFalse($result);
-    }
-
-    function test_fail_if_password_is_missing() {
-        unset($this->properties['password']);
-        $result = $this->service->create_user($this->properties);
-        $this->assertFalse($result);
-    }
-
-    function test_fail_if_user_already_exists() {
+    function test_duplicate_username() {
         $this->having_user_id('user1', 123);
-        $result = $this->service->create_user($this->properties);
-        $this->assertFalse($result);
-    }
-
-    function test_fail_if_username_is_missing() {
-        unset($this->properties['username']);
-        $result = $this->service->create_user($this->properties);
-        $this->assertFalse($result);
+        $this->service_throws('Duplicate username', 'create_user',
+                              $this->properties);
     }
 }
 
 class local_secretaria_test_update_user extends local_secretaria_test_base {
 
-    function test_fail_if_update_fails() {
-        $record = (object) array('id' => 123);
-        $this->moodle->shouldReceive('get_user_id')
-            ->with('user1')->andReturn(123);
-        $this->moodle->shouldReceive('update_record')
-            ->with('user', Mockery::mustBe($record))
-            ->once()->andReturn(false);
-
-        $result = $this->service->update_user('user1', array());
-
-        $this->assertFalse($result);
-    }
-
-    function test_fail_if_user_does_not_exist() {
-        $this->moodle->shouldReceive('get_user_id')
-            ->with('user1')->andReturn(false);
-        $result = $this->service->update_user('user1', array());
-        $this->assertFalse($result);
-    }
-
-    function test_fail_if_username_already_exists() {
-        $this->moodle->shouldReceive('get_user_id')
-            ->with('user1')->andReturn(123);
-       $this->moodle->shouldReceive('get_user_id')
-            ->with('user2')->andReturn(456);
-
-        $result = $this->service->update_user('user1', array(
-            'username' => 'user2',
-        ));
-
-        $this->assertFalse($result);
-    }
-
-    function test_ignore_username_if_not_changed() {
-        $record = (object) array('id' => 123);
-        $this->moodle->shouldReceive('get_user_id')
-            ->with('user1')->andReturn(123);
-        $this->moodle->shouldReceive('update_record')
-            ->with('user', Mockery::mustBe($record))
-            ->once()->andReturn(true);
-
-        $result = $this->service->update_user('user1', array(
-            'username' => 'user1',
-        ));
-
-        $this->assertTrue($result);
-    }
-
-    function test_update_user_record() {
+    function test() {
         $record = (object) array(
             'id' => 123,
             'username' => 'user2',
@@ -253,21 +224,44 @@ class local_secretaria_test_update_user extends local_secretaria_test_base {
             ->with('user', Mockery::mustBe($record))
             ->once()->andReturn(true);
 
-        $result = $this->service->update_user('user1', array(
+        $this->service->update_user('user1', array(
             'username' => 'user2',
             'password' => 'abc123',
             'firstname' => 'First2',
             'lastname' => 'Last2',
             'email' => 'user2@example.org',
         ));
+    }
 
-        $this->assertTrue($result);
+    function test_unknown_user() {
+        $this->moodle->shouldReceive('get_user_id')
+            ->with('user1')->andReturn(false);
+        $this->service_throws('Unknown user', 'update_user', 'user1', array());
+    }
+
+    function test_duplicate_username() {
+        $this->moodle->shouldReceive('get_user_id')
+            ->with('user1')->andReturn(123);
+       $this->moodle->shouldReceive('get_user_id')
+            ->with('user2')->andReturn(456);
+        $this->service_throws('Duplicate username', 'update_user',
+                              'user1', array('username' => 'user2'));
+    }
+
+    function test_username_not_changed() {
+        $record = (object) array('id' => 123);
+        $this->moodle->shouldReceive('get_user_id')
+            ->with('user1')->andReturn(123);
+        $this->moodle->shouldReceive('update_record')
+            ->with('user', Mockery::mustBe($record))
+            ->once()->andReturn(true);
+        $this->service->update_user('user1', array('username' => 'user1'));
     }
 }
 
 class local_secretaria_test_delete_user extends local_secretaria_test_base {
 
-    function test_delete_user() {
+    function test() {
         $record = (object) array(
             'id' => 123,
             'username' => 'user1',
@@ -279,15 +273,11 @@ class local_secretaria_test_delete_user extends local_secretaria_test_base {
             ->with(Mockery::mustBe($record))
             ->once()->andReturn(true);
 
-        $result = $this->service->delete_user('user1');
-
-        $this->assertTrue($result);
+        $this->service->delete_user('user1');
     }
 
-    function test_fail_if_user_does_not_exist() {
-        $result = $this->service->delete_user('user1', array());
-
-        $this->assertFalse($result);
+    function test_unknown_user() {
+        $this->service_throws('Unknown user', 'delete_user', 'user1');
     }
 }
 
@@ -295,22 +285,7 @@ class local_secretaria_test_delete_user extends local_secretaria_test_base {
 
 class local_secretaria_test_get_course_enrolments extends local_secretaria_test_base {
 
-    function test_fail_if_course_does_not_exist() {
-        $result = $this->service->get_course_enrolments('course1');
-        $this->assertNull($result);
-    }
-
-    function test_return_empty_array_if_no_enrolments() {
-        $this->having_context_id('course1', 123);
-        $this->moodle->shouldReceive('get_role_assignments_by_context')
-            ->with(123)->andReturn(array());
-
-        $result = $this->service->get_course_enrolments('course1');
-
-        $this->assertEqual($result, array());
-    }
-
-    function test_return_enrolments() {
+    function test() {
         $records = array(
             (object) array('id' => 456, 'user' => 'user1', 'role' => 'role1'),
             (object) array('id' => 789, 'user' => 'user2', 'role' => 'role2'),
@@ -327,26 +302,25 @@ class local_secretaria_test_get_course_enrolments extends local_secretaria_test_
             array('user' => 'user2', 'role' => 'role2'),
         ));
     }
-}
 
-class local_secretaria_test_get_user_enrolments extends local_secretaria_test_base {
-
-    function test_fail_if_course_does_not_exist() {
-        $result = $this->service->get_user_enrolments('user1');
-        $this->assertNull($result);
-    }
-
-    function test_return_empty_array_if_no_enrolments() {
-        $this->having_user_id('user1', 123);
-        $this->moodle->shouldReceive('get_role_assignments_by_user')
+    function test_no_enrolments() {
+        $this->having_context_id('course1', 123);
+        $this->moodle->shouldReceive('get_role_assignments_by_context')
             ->with(123)->andReturn(array());
 
-        $result = $this->service->get_user_enrolments('user1');
+        $result = $this->service->get_course_enrolments('course1');
 
         $this->assertEqual($result, array());
     }
 
-    function test_return_enrolments() {
+    function test_unknown_course() {
+        $this->service_throws('Unknown course', 'get_course_enrolments', 'course1');
+    }
+}
+
+class local_secretaria_test_get_user_enrolments extends local_secretaria_test_base {
+
+    function test() {
         $records = array(
             (object) array('id' => 456, 'course' => 'course1', 'role' => 'role1'),
             (object) array('id' => 789, 'course' => 'course2', 'role' => 'role2'),
@@ -362,29 +336,25 @@ class local_secretaria_test_get_user_enrolments extends local_secretaria_test_ba
             array('course' => 'course2', 'role' => 'role2'),
         ));
     }
+
+    function test_no_enrolments() {
+        $this->having_user_id('user1', 123);
+        $this->moodle->shouldReceive('get_role_assignments_by_user')
+            ->with(123)->andReturn(array());
+
+        $result = $this->service->get_user_enrolments('user1');
+
+        $this->assertEqual($result, array());
+    }
+
+    function test_unknown_user() {
+        $this->service_throws('Unknown user', 'get_user_enrolments', 'user1');
+    }
 }
 
 class local_secretaria_test_enrol_users extends local_secretaria_test_base {
 
-    function test_ignore_existent_enrolment() {
-        $this->having_context_id('course1', 101);
-        $this->having_user_id('user1', 201);
-        $this->having_role_id('role1', 301);
-        $this->moodle->shouldReceive('role_assignment_exists')
-                ->with(101, 201, 301)->andReturn(true);
-        $this->moodle->shouldReceive('start_transaction')->once()->ordered();
-        $this->moodle->shouldReceive('commit_transaction')->once()->ordered();
-
-        $result = $this->service->enrol_users(array(
-            array('course' => 'course1',
-                  'user' => 'user1',
-                  'role' => 'role1'),
-        ));
-
-        $this->assertTrue($result);
-    }
-
-    function test_insert_role_assignments() {
+    function test() {
         $this->moodle->shouldReceive('start_transaction')->once()->ordered();
         for ($i = 1; $i <= 3; $i++) {
             $this->having_context_id('course' . $i, 100 + $i);
@@ -398,86 +368,64 @@ class local_secretaria_test_enrol_users extends local_secretaria_test_base {
         }
         $this->moodle->shouldReceive('commit_transaction')->once()->ordered();
 
-        $result = $this->service->enrol_users(array(
+        $this->service->enrol_users(array(
             array('course' => 'course1', 'user' => 'user1', 'role' => 'role1'),
             array('course' => 'course2', 'user' => 'user2', 'role' => 'role2'),
             array('course' => 'course3', 'user' => 'user3', 'role' => 'role3'),
         ));
-
-        $this->assertTrue($result);
     }
 
-    function test_rollback_if_context_does_not_exist() {
-        $this->having_user_id('user1', 201);
-        $this->having_role_id('role1', 301);
-        $this->moodle->shouldReceive('start_transaction')->once()->ordered();
-        $this->moodle->shouldReceive('rollback_transaction')->once()->ordered();
-
-        $result = $this->service->enrol_users(array(
-            array('course' => 'course1',
-                  'user' => 'user1',
-                  'role' => 'role1'),
-        ));
-
-        $this->assertFalse($result);
-    }
-
-    function test_rollback_if_insert_fails() {
+    function test_duplicate_enrolment() {
         $this->having_context_id('course1', 101);
         $this->having_user_id('user1', 201);
         $this->having_role_id('role1', 301);
         $this->moodle->shouldReceive('role_assignment_exists')
-            ->with(101, 201, 301)->andReturn(false);
-
+                ->with(101, 201, 301)->andReturn(true);
         $this->moodle->shouldReceive('start_transaction')->once()->ordered();
-        $this->moodle->shouldReceive('insert_role_assignment')
-            ->with(101, 201, 301)->andReturn(false)
-            ->once()->ordered();
-        $this->moodle->shouldReceive('rollback_transaction')->once()->ordered();
+        $this->moodle->shouldReceive('commit_transaction')->once()->ordered();
 
-        $result = $this->service->enrol_users(array(
-            array('course' => 'course1',
-                  'user' => 'user1',
-                  'role' => 'role1'),
+        $this->service->enrol_users(array(
+            array('course' => 'course1', 'user' => 'user1', 'role' => 'role1'),
         ));
-
-        $this->assertFalse($result);
     }
 
-    function test_rollback_if_user_does_not_exist() {
+    function test_unknown_course() {
+        $this->having_user_id('user1', 201);
+        $this->having_role_id('role1', 301);
+        $this->moodle->shouldReceive('start_transaction')->once()->ordered();
+        $this->moodle->shouldReceive('rollback_transaction')->once()->ordered();
+
+        $this->service_throws('Unknown course', 'enrol_users', array(
+            array('course' => 'course1', 'user' => 'user1', 'role' => 'role1')
+        ));
+    }
+
+    function test_unknown_user() {
         $this->having_context_id('course1', 101);
         $this->having_role_id('role1', 301);
         $this->moodle->shouldReceive('start_transaction')->once()->ordered();
         $this->moodle->shouldReceive('rollback_transaction')->once()->ordered();
 
-        $result = $this->service->enrol_users(array(
-            array('course' => 'course1',
-                  'user' => 'user1',
-                  'role' => 'role1'),
+        $this->service_throws('Unknown user', 'enrol_users', array(
+            array('course' => 'course1', 'user' => 'user1', 'role' => 'role1')
         ));
-
-        $this->assertFalse($result);
     }
 
-    function test_rollback_if_role_does_not_exist() {
+    function test_unknown_role() {
         $this->having_context_id('course1', 101);
         $this->having_user_id('user1', 201);
         $this->moodle->shouldReceive('start_transaction')->once()->ordered();
         $this->moodle->shouldReceive('rollback_transaction')->once()->ordered();
 
-        $result = $this->service->enrol_users(array(
-            array('course' => 'course1',
-                  'user' => 'user1',
-                  'role' => 'role1'),
+        $this->service_throws('Unknown role', 'enrol_users', array(
+            array('course' => 'course1', 'user' => 'user1', 'role' => 'role1')
         ));
-
-        $this->assertFalse($result);
     }
 }
 
 class local_secretaria_test_unenrol_users extends local_secretaria_test_base {
 
-    function test_delete_role_assignments() {
+    function test() {
         $this->moodle->shouldReceive('start_transaction')->once()->ordered();
         for ($i = 1; $i <= 3; $i++) {
             $this->having_context_id('course' . $i, 100 + $i);
@@ -491,58 +439,44 @@ class local_secretaria_test_unenrol_users extends local_secretaria_test_base {
         }
         $this->moodle->shouldReceive('commit_transaction')->once()->ordered();
 
-        $result = $this->service->unenrol_users(array(
+        $this->service->unenrol_users(array(
             array('course' => 'course1', 'user' => 'user1', 'role' => 'role1'),
             array('course' => 'course2', 'user' => 'user2', 'role' => 'role2'),
             array('course' => 'course3', 'user' => 'user3', 'role' => 'role3'),
         ));
-
-        $this->assertTrue($result);
     }
 
-    function test_rollback_if_context_does_not_exist() {
+    function test_unknown_course() {
         $this->having_user_id('user1', 201);
         $this->having_role_id('role1', 301);
         $this->moodle->shouldReceive('start_transaction')->once()->ordered();
         $this->moodle->shouldReceive('rollback_transaction')->once()->ordered();
 
-        $result = $this->service->unenrol_users(array(
-            array('course' => 'course1',
-                  'user' => 'user1',
-                  'role' => 'role1'),
+        $this->service_throws('Unknown course', 'unenrol_users', array(
+            array('course' => 'course1', 'user' => 'user1', 'role' => 'role1')
         ));
-
-        $this->assertFalse($result);
     }
 
-    function test_rollback_user_does_not_exist() {
+    function test_unknown_user() {
         $this->having_context_id('course1', 101);
         $this->having_role_id('role1', 301);
         $this->moodle->shouldReceive('start_transaction')->once()->ordered();
         $this->moodle->shouldReceive('rollback_transaction')->once()->ordered();
 
-        $result = $this->service->unenrol_users(array(
-            array('course' => 'course1',
-                  'user' => 'user1',
-                  'role' => 'role1'),
+        $this->service_throws('Unknown user', 'unenrol_users', array(
+            array('course' => 'course1', 'user' => 'user1', 'role' => 'role1')
         ));
-
-        $this->assertFalse($result);
     }
 
-    function test_rollback_if_role_does_not_exist() {
+    function test_unknown_role() {
         $this->having_context_id('course1', 101);
         $this->having_user_id('user1', 201);
         $this->moodle->shouldReceive('start_transaction')->once()->ordered();
         $this->moodle->shouldReceive('rollback_transaction')->once()->ordered();
 
-        $result = $this->service->unenrol_users(array(
-            array('course' => 'course1',
-                  'user' => 'user1',
-                  'role' => 'role1'),
+        $this->service_throws('Unknown role', 'unenrol_users', array(
+            array('course' => 'course1', 'user' => 'user1', 'role' => 'role1')
         ));
-
-        $this->assertFalse($result);
     }
 }
 
@@ -550,12 +484,7 @@ class local_secretaria_test_unenrol_users extends local_secretaria_test_base {
 
 class local_secretaria_test_get_groups extends local_secretaria_test_base {
 
-    function test_fail_if_course_does_not_exist() {
-        $result = $this->service->get_groups('course1');
-        $this->assertNull($result);
-    }
-
-    function test_return_groups() {
+    function test() {
         $records = array(
             (object) array('id' => 201,
                            'name' => 'group1',
@@ -576,7 +505,7 @@ class local_secretaria_test_get_groups extends local_secretaria_test_base {
         ));
     }
 
-    function test_return_empty_array_if_no_groups() {
+    function test_no_groups() {
         $this->having_course_id('course1', 101);
         $this->moodle->shouldReceive('get_groups')
             ->with(101)->andReturn(false);
@@ -585,8 +514,11 @@ class local_secretaria_test_get_groups extends local_secretaria_test_base {
 
         $this->assertEqual($result, array());
     }
-}
 
+    function test_unknown_course() {
+        $this->service_throws('Unknown course', 'get_groups', 'course1');
+    }
+}
 
 class local_secretaria_test_create_group extends local_secretaria_test_base {
 
@@ -600,84 +532,55 @@ class local_secretaria_test_create_group extends local_secretaria_test_base {
             ->byDefault();
     }
 
-    function test_create_group() {
+    function test() {
         $this->having_course_id('course1', 101);
         $this->moodle->shouldReceive('insert_group')
             ->with(101, 'group1', 'Group 1')
             ->once()->andReturn(true);
 
-        $result = $this->service->create_group('course1', 'group1', 'Group 1');
-
-        $this->assertTrue($result);
+        $this->service->create_group('course1', 'group1', 'Group 1');
     }
 
-    function test_fail_if_course_does_not_exist() {
-        $result = $this->service->create_group('course1', 'group1', 'Group 1');
-        $this->assertFalse($result);
+    function test_unknown_course() {
+        $this->service_throws('Unknown course', 'create_group',
+                              'course1', 'group1', 'Group 1');
     }
 
-    function test_fail_if_group_exists() {
+    function test_duplicate_group() {
         $this->having_course_id('course1', 101);
         $this->having_group_id(101, 'group1', 201);
 
-        $result = $this->service->create_group('course1', 'group1', 'Group 1');
-
-        $this->assertFalse($result);
-    }
-
-    function test_fail_if_insert_fails() {
-        $this->having_course_id('course1', 101);
-        $this->moodle->shouldReceive('insert_group')
-            ->with(101, 'group1', 'Group 1')
-            ->once()->andReturn(false);
-
-        $result = $this->service->create_group('course1', 'group1', 'Group 1');
-
-        $this->assertFalse($result);
+        $this->service_throws('Duplicate group', 'create_group',
+                              'course1', 'group1', 'Group 1');
     }
 }
 
 
 class local_secretaria_test_delete_group extends local_secretaria_test_base {
 
-    function test_fail_if_course_does_not_exist() {
-        $result = $this->service->delete_group('course1', 'group1');
-        $this->assertFalse($result);
-    }
-
-    function test_fail_if_group_does_not_exist() {
-        $this->having_course_id('course1', 101);
-        $result = $this->service->delete_group('course1', 'group1');
-        $this->assertFalse($result);
-    }
-
-    function test_delete_group() {
+    function test() {
         $this->having_course_id('course1', 101);
         $this->having_group_id(101, 'group1', 201);
         $this->moodle->shouldReceive('groups_delete_group')
             ->with(201)->andReturn(true)->once();
 
-        $result = $this->service->delete_group('course1', 'group1');
+        $this->service->delete_group('course1', 'group1');
+    }
 
-        $this->assertTrue($result);
+    function test_unknown_course() {
+        $this->service_throws('Unknown course', 'delete_group', 'course1', 'group1');
+    }
+
+    function test_unknown_group() {
+        $this->having_course_id('course1', 101);
+        $this->service_throws('Unknown group', 'delete_group', 'course1', 'group1');
     }
 }
 
 
 class local_secretaria_test_get_group_members extends local_secretaria_test_base {
 
-    function test_fail_if_course_does_not_exist() {
-        $result = $this->service->get_group_members('course1', 'group1');
-        $this->assertNull($result);
-    }
-
-    function test_fail_if_group_does_not_exist() {
-        $this->having_course_id('course1', 101);
-        $result = $this->service->get_group_members('course1', 'group1');
-        $this->assertNull($result);
-    }
-
-    function test_return_group_members() {
+    function test() {
         $records = array(
             (object) array('id' => 301, 'username' => 'user1'),
             (object) array('id' => 302, 'username' => 'user2'),
@@ -692,7 +595,7 @@ class local_secretaria_test_get_group_members extends local_secretaria_test_base
         $this->assertEqual($result, array('user1', 'user2'));
     }
 
-    function test_return_empty_array_if_no_members() {
+    function test_no_members() {
         $this->having_course_id('course1', 101);
         $this->having_group_id(101, 'group1', 201);
         $this->moodle->shouldReceive('get_group_members')
@@ -702,12 +605,23 @@ class local_secretaria_test_get_group_members extends local_secretaria_test_base
 
         $this->assertEqual($result, array());
     }
+
+    function test_unknown_course() {
+        $this->service_throws('Unknown course', 'get_group_members',
+                              'course1', 'group1');
+    }
+
+    function test_unknown_group() {
+        $this->having_course_id('course1', 101);
+        $this->service_throws('Unknown group', 'get_group_members',
+                              'course1', 'group1');
+    }
 }
 
 
 class local_secretaria_test_add_group_members extends local_secretaria_test_base {
 
-    function test_add_group_members() {
+    function test() {
         $this->having_course_id('course1', 101);
         $this->having_group_id(101, 'group1', 201);
         $this->having_user_id('user1', 301);
@@ -719,70 +633,35 @@ class local_secretaria_test_add_group_members extends local_secretaria_test_base
             ->with(201, 302)->andReturn(true)->once()->ordered();
         $this->moodle->shouldReceive('commit_transaction')->once()->ordered();
 
-        $result = $this->service->add_group_members(
-            'course1', 'group1', array('user1', 'user2'));
-
-        $this->assertTrue($result);
+        $this->service->add_group_members('course1', 'group1', array('user1', 'user2'));
     }
 
-    function test_fail_if_course_does_not_exist() {
-        $result = $this->service->add_group_members(
-            'course1', 'group1', array('user1', 'user2'));
-        $this->assertFalse($result);
+    function test_unknown_course() {
+        $this->service_throws('Unknown course', 'add_group_members',
+                              'course1', 'group1', array());
     }
 
-    function test_fail_if_group_does_not_exist() {
+    function test_unknown_group() {
         $this->having_course_id('course1', 101);
-        $result = $this->service->add_group_members(
-            'course1', 'group1', array('user1', 'user2'));
-        $this->assertFalse($result);
+        $this->service_throws('Unknown group', 'add_group_members',
+                              'course1', 'group1', array());
     }
 
-    function test_rollback_if_user_does_not_exist() {
+    function test_unknown_user() {
         $this->having_course_id('course1', 101);
         $this->having_group_id(101, 'group1', 201);
         $this->moodle->shouldReceive('start_transaction')->once()->ordered();
         $this->moodle->shouldReceive('rollback_transaction')->once()->ordered();
 
-        $result = $this->service->add_group_members(
-            'course1', 'group1', array('user1'));
-
-        $this->assertFalse($result);
-    }
-
-    function test_rollback_if_addition_fails() {
-        $this->having_course_id('course1', 101);
-        $this->having_group_id(101, 'group1', 201);
-        $this->having_user_id('user1', 301);
-        $this->moodle->shouldReceive('start_transaction')->once()->ordered();
-        $this->moodle->shouldReceive('groups_add_member')
-            ->with(201, 301)->andReturn(false)->once()->ordered();
-        $this->moodle->shouldReceive('rollback_transaction')->once()->ordered();
-
-        $result = $this->service->add_group_members(
-            'course1', 'group1', array('user1'));
-
-        $this->assertFalse($result);
+        $this->service_throws('Unknown user', 'add_group_members',
+                              'course1', 'group1', array('user1'));
     }
 }
 
 
 class local_secretaria_test_remove_group_members extends local_secretaria_test_base {
 
-    function test_fail_if_course_does_not_exist() {
-        $result = $this->service->remove_group_members(
-            'course1', 'group1', array('user1', 'user2'));
-        $this->assertFalse($result);
-    }
-
-    function test_fail_if_group_does_not_exist() {
-        $this->having_course_id('course1', 101);
-        $result = $this->service->remove_group_members(
-            'course1', 'group1', array('user1', 'user2'));
-        $this->assertFalse($result);
-    }
-
-    function test_remove_group_members() {
+    function test() {
         $this->having_course_id('course1', 101);
         $this->having_group_id(101, 'group1', 201);
         $this->having_user_id('user1', 301);
@@ -796,20 +675,27 @@ class local_secretaria_test_remove_group_members extends local_secretaria_test_b
 
         $result = $this->service->remove_group_members(
             'course1', 'group1', array('user1', 'user2'));
-
-        $this->assertTrue($result);
     }
 
-    function test_rollback_if_user_does_not_exist() {
+    function test_unknown_course() {
+        $this->service_throws('Unknown course', 'remove_group_members',
+                              'course1', 'group1', array());
+    }
+
+    function test_unknown_group() {
+        $this->having_course_id('course1', 101);
+        $this->service_throws('Unknown group', 'remove_group_members',
+                              'course1', 'group1', array());
+    }
+
+    function test_unknown_user() {
         $this->having_course_id('course1', 101);
         $this->having_group_id(101, 'group1', 201);
         $this->moodle->shouldReceive('start_transaction')->once()->ordered();
         $this->moodle->shouldReceive('rollback_transaction')->once()->ordered();
 
-        $result = $this->service->remove_group_members(
-            'course1', 'group1', array('user1'));
-
-        $this->assertFalse($result);
+        $this->service_throws('Unknown user', 'remove_group_members',
+                              'course1', 'group1', array('user1'));
     }
 }
 
@@ -817,33 +703,7 @@ class local_secretaria_test_remove_group_members extends local_secretaria_test_b
 
 class local_secretaria_test_get_course_grades extends local_secretaria_test_base {
 
-    function test_return_null_if_course_does_not_exist() {
-        $result = $this->service->get_course_grades(
-            'course1', array('user1', 'user2'));
-        $this->assertNull($result);
-    }
-
-    function test_return_null_if_no_grade_items() {
-        $this->having_course_id('course1', 101);
-        $this->having_user_id('user1', 201);
-        $this->having_user_id('user2', 202);
-        $this->moodle->shouldReceive('grade_item_fetch_all')
-            ->with(101)->andReturn(false);
-
-        $result = $this->service->get_course_grades(
-            'course1', array('user1', 'user2'));
-
-        $this->assertNull($result);
-    }
-
-    function test_return_null_if_user_does_not_exist() {
-        $this->having_course_id('course1', 101);
-        $result = $this->service->get_course_grades(
-            'course1', array('user1', 'user2'));
-        $this->assertNull($result);
-    }
-
-    function test_return_course_grades() {
+    function test() {
         $grade_items = array(
             (object) array(
                 'itemtype' => 'course',
@@ -916,34 +776,35 @@ class local_secretaria_test_get_course_grades extends local_secretaria_test_base
                   'grades' => array('user1' => '7.1', 'user2' => '7.2')),
         ));
     }
+
+    function test_no_grade_items() {
+        $this->having_course_id('course1', 101);
+        $this->having_user_id('user1', 201);
+        $this->having_user_id('user2', 202);
+        $this->moodle->shouldReceive('grade_item_fetch_all')
+            ->with(101)->andReturn(false);
+
+        $result = $this->service->get_course_grades(
+            'course1', array('user1', 'user2'));
+
+        $this->assertIdentical($result, array());
+    }
+
+    function test_unknown_course() {
+        $this->service_throws('Unknown course', 'get_course_grades',
+                              'course1', array('user1', 'user2'));
+    }
+
+    function test_unknown_user() {
+        $this->having_course_id('course1', 101);
+        $this->service_throws('Unknown user', 'get_course_grades',
+                              'course1', array('user1', 'user2'));
+    }
 }
 
 class local_secretaria_test_get_user_grades extends local_secretaria_test_base {
 
-    function test_return_null_if_course_does_not_exist() {
-        $this->having_user_id('user1', 201);
-        $result = $this->service->get_user_grades(
-            'user1', array('course1', 'course2'));
-        $this->assertNull($result);
-    }
-
-    function test_return_null_if_no_grade() {
-        $this->having_course_id('course1', 101);
-        $this->having_user_id('user1', 201);
-        $this->moodle->shouldReceive('grade_get_course_grade')
-            ->with(201, 101)->andReturn(false);
-
-        $result = $this->service->get_user_grades('user1', array('course1'));
-
-        $this->assertNull($result);
-    }
-
-    function test_return_null_if_user_does_not_exist() {
-        $result = $this->service->get_user_grades('user1', array());
-        $this->assertNull($result);
-    }
-
-    function test_return_user_grades() {
+    function test() {
         $grade1 = (object) array('str_grade' => '5.1');
         $grade2 = (object) array('str_grade' => '6.2');
 
@@ -962,5 +823,26 @@ class local_secretaria_test_get_user_grades extends local_secretaria_test_base {
             'course1' => '5.1',
             'course2' => '6.2',
         ));
+    }
+
+    function test_no_grade() {
+        $this->having_user_id('user1', 201);
+        $this->having_course_id('course1', 101);
+        $this->moodle->shouldReceive('grade_get_course_grade')
+            ->with(201, 101)->andReturn(false);
+
+        $result = $this->service->get_user_grades('user1', array('course1'));
+
+        $this->assertIdentical($result, array('course1' => null));
+    }
+
+    function test_unknown_course() {
+        $this->having_user_id('user1', 201);
+        $this->service_throws('Unknown course', 'get_user_grades',
+                              'user1', array('course1', 'course2'));
+    }
+
+    function test_unknown_user() {
+        $this->service_throws('Unknown user', 'get_user_grades', 'user1', array());
     }
 }

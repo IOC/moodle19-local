@@ -17,68 +17,52 @@ abstract class local_secretaria_test_base extends UnitTestCase {
     protected $moodle;
     protected $operations;
 
-    function having_course_id($shortname, $courseid) {
-        $this->moodle->shouldReceive('get_course_id')
-            ->with($shortname)->andReturn($courseid);
-    }
-
-    function having_context_id($shortname, $courseid) {
-        $this->moodle->shouldReceive('get_context_id')
-            ->with($shortname)->andReturn($courseid);
-    }
-
-    function having_group_id($courseid, $groupname, $groupid) {
-        $this->moodle->shouldReceive('get_group_id')
-            ->with($courseid, $groupname)->andReturn($groupid);
-    }
-
-    function having_role_id($shortname, $roleid) {
-        $this->moodle->shouldReceive('get_role_id')
-            ->with($shortname)->andReturn($roleid);
-    }
-
-    function having_user_id($username, $userid) {
-        $this->moodle->shouldReceive('get_user_id')
-            ->with($username)->andReturn($userid);
-    }
-
-    function having_user_record($username, $record) {
-        $this->moodle->shouldReceive('get_user_record')
-            ->with($username)->andReturn($record);
-    }
-
-    function operations_throws($msg, $func) {
-        $args = array_slice(func_get_args(), 2);
-        try {
-            call_user_func_array(array($this->operations, $func), $args);
-            $this->fail();
-        } catch (local_secretaria_exception $e) {
-            $this->assertEqual($e->getMessage(), $msg);
-        }
-    }
-
     function setUp() {
         $this->moodle = Mockery::mock('local_secretaria_moodle');
+        $this->moodle->shouldReceive('get_context_id')->andReturn(false)->byDefault();
+        $this->moodle->shouldReceive('get_course_id')->andReturn(false)->byDefault();
+        $this->moodle->shouldReceive('get_group_id')->andReturn(false)->byDefault();
+        $this->moodle->shouldReceive('get_role_id')->andReturn(false)->byDefault();
+        $this->moodle->shouldReceive('get_user_id')->andReturn(false)->byDefault();
+        $this->moodle->shouldReceive('get_user_record')->andReturn(false)->byDefault();
         $this->operations = new local_secretaria_operations($this->moodle);
-
-        $this->moodle->shouldReceive('get_context_id')
-            ->andReturn(false)->byDefault();
-        $this->moodle->shouldReceive('get_course_id')
-            ->andReturn(false)->byDefault();
-        $this->moodle->shouldReceive('get_group_id')
-            ->andReturn(false)->byDefault();
-        $this->moodle->shouldReceive('get_role_id')
-            ->andReturn(false)->byDefault();
-        $this->moodle->shouldReceive('get_user_id')
-            ->andReturn(false)->byDefault();
-        $this->moodle->shouldReceive('get_user_record')
-            ->andReturn(false)->byDefault();
     }
 
     function tearDown() {
         Mockery::close();
     }
+
+    protected function having_context_id($shortname, $courseid) {
+        $this->moodle->shouldReceive('get_context_id')
+            ->with($shortname)->andReturn($courseid);
+    }
+
+    protected function having_course_id($shortname, $courseid) {
+        $this->moodle->shouldReceive('get_course_id')
+            ->with($shortname)->andReturn($courseid);
+    }
+
+    protected function having_group_id($courseid, $groupname, $groupid) {
+        $this->moodle->shouldReceive('get_group_id')
+            ->with($courseid, $groupname)->andReturn($groupid);
+    }
+
+    protected function having_role_id($shortname, $roleid) {
+        $this->moodle->shouldReceive('get_role_id')
+            ->with($shortname)->andReturn($roleid);
+    }
+
+    protected function having_user_id($username, $userid) {
+        $this->moodle->shouldReceive('get_user_id')
+            ->with($username)->andReturn($userid);
+    }
+
+    protected function having_user_record($username, $record) {
+        $this->moodle->shouldReceive('get_user_record')
+            ->with($username)->andReturn($record);
+    }
 }
+
 
 class local_secretaria_test_valid_param extends UnitTestCase {
 
@@ -169,9 +153,12 @@ class local_secretaria_test_get_user extends local_secretaria_test_base {
     }
 
     function test_unknown_user() {
-        $this->operations_throws('Unknown user', 'get_user', 'user');
+        $this->expectException(new local_secretaria_exception('Unknown user'));
+
+        $this->operations->get_user('user');
     }
 }
+
 
 class local_secretaria_test_create_user extends local_secretaria_test_base {
 
@@ -195,10 +182,11 @@ class local_secretaria_test_create_user extends local_secretaria_test_base {
 
     function test_duplicate_username() {
         $this->having_user_id('user1', 123);
-        $this->operations_throws('Duplicate username', 'create_user',
-                                 $this->properties);
+        $this->expectException(new local_secretaria_exception('Duplicate username'));
+        $this->operations->create_user($this->properties);
     }
 }
+
 
 class local_secretaria_test_update_user extends local_secretaria_test_base {
 
@@ -211,10 +199,8 @@ class local_secretaria_test_update_user extends local_secretaria_test_base {
             'lastname' => 'Last2',
             'email' => 'user2@example.org',
         );
-        $this->moodle->shouldReceive('get_user_id')
-            ->with('user1')->andReturn(123);
-        $this->moodle->shouldReceive('get_user_id')
-            ->with('user2')->andReturn(false);
+        $this->having_user_id('user1', 123);
+        $this->having_user_id('user2', false);
         $this->moodle->shouldReceive('update_record')
             ->with('user', Mockery::mustBe($record))
             ->once()->andReturn(true);
@@ -229,30 +215,27 @@ class local_secretaria_test_update_user extends local_secretaria_test_base {
     }
 
     function test_unknown_user() {
-        $this->moodle->shouldReceive('get_user_id')
-            ->with('user1')->andReturn(false);
-        $this->operations_throws('Unknown user', 'update_user', 'user1', array());
+        $this->expectException(new local_secretaria_exception('Unknown user'));
+        $this->operations->update_user('user1', array());
     }
 
     function test_duplicate_username() {
-        $this->moodle->shouldReceive('get_user_id')
-            ->with('user1')->andReturn(123);
-       $this->moodle->shouldReceive('get_user_id')
-            ->with('user2')->andReturn(456);
-        $this->operations_throws('Duplicate username', 'update_user',
-                                 'user1', array('username' => 'user2'));
+        $this->having_user_id('user1', 123);
+        $this->having_user_id('user2', 456);
+        $this->expectException(new local_secretaria_exception('Duplicate username'));
+        $this->operations->update_user('user1', array('username' => 'user2'));
     }
 
     function test_username_not_changed() {
         $record = (object) array('id' => 123);
-        $this->moodle->shouldReceive('get_user_id')
-            ->with('user1')->andReturn(123);
+        $this->having_user_id('user1', 123);
         $this->moodle->shouldReceive('update_record')
             ->with('user', Mockery::mustBe($record))
             ->once()->andReturn(true);
         $this->operations->update_user('user1', array('username' => 'user1'));
     }
 }
+
 
 class local_secretaria_test_delete_user extends local_secretaria_test_base {
 
@@ -272,9 +255,11 @@ class local_secretaria_test_delete_user extends local_secretaria_test_base {
     }
 
     function test_unknown_user() {
-        $this->operations_throws('Unknown user', 'delete_user', 'user1');
+        $this->expectException(new local_secretaria_exception('Unknown user'));
+        $this->operations->delete_user('user1');
     }
 }
+
 
 /* Enrolments */
 
@@ -309,9 +294,11 @@ class local_secretaria_test_get_course_enrolments extends local_secretaria_test_
     }
 
     function test_unknown_course() {
-        $this->operations_throws('Unknown course', 'get_course_enrolments', 'course1');
+        $this->expectException(new local_secretaria_exception('Unknown course'));
+        $this->operations->get_course_enrolments('course1');
     }
 }
+
 
 class local_secretaria_test_get_user_enrolments extends local_secretaria_test_base {
 
@@ -343,9 +330,11 @@ class local_secretaria_test_get_user_enrolments extends local_secretaria_test_ba
     }
 
     function test_unknown_user() {
-        $this->operations_throws('Unknown user', 'get_user_enrolments', 'user1');
+        $this->expectException(new local_secretaria_exception('Unknown user'));
+        $this->operations->get_user_enrolments('user1');
     }
 }
+
 
 class local_secretaria_test_enrol_users extends local_secretaria_test_base {
 
@@ -390,8 +379,9 @@ class local_secretaria_test_enrol_users extends local_secretaria_test_base {
         $this->moodle->shouldReceive('start_transaction')->once()->ordered();
         $this->moodle->shouldReceive('rollback_transaction')->once()->ordered();
 
-        $this->operations_throws('Unknown course', 'enrol_users', array(
-            array('course' => 'course1', 'user' => 'user1', 'role' => 'role1')
+        $this->expectException(new local_secretaria_exception('Unknown course'));
+        $this->operations->enrol_users(array(
+            array('course' => 'course1', 'user' => 'user1', 'role' => 'role1'),
         ));
     }
 
@@ -401,8 +391,9 @@ class local_secretaria_test_enrol_users extends local_secretaria_test_base {
         $this->moodle->shouldReceive('start_transaction')->once()->ordered();
         $this->moodle->shouldReceive('rollback_transaction')->once()->ordered();
 
-        $this->operations_throws('Unknown user', 'enrol_users', array(
-            array('course' => 'course1', 'user' => 'user1', 'role' => 'role1')
+        $this->expectException(new local_secretaria_exception('Unknown user'));
+        $this->operations->enrol_users(array(
+            array('course' => 'course1', 'user' => 'user1', 'role' => 'role1'),
         ));
     }
 
@@ -412,11 +403,13 @@ class local_secretaria_test_enrol_users extends local_secretaria_test_base {
         $this->moodle->shouldReceive('start_transaction')->once()->ordered();
         $this->moodle->shouldReceive('rollback_transaction')->once()->ordered();
 
-        $this->operations_throws('Unknown role', 'enrol_users', array(
-            array('course' => 'course1', 'user' => 'user1', 'role' => 'role1')
+        $this->expectException(new local_secretaria_exception('Unknown role'));
+        $this->operations->enrol_users(array(
+            array('course' => 'course1', 'user' => 'user1', 'role' => 'role1'),
         ));
     }
 }
+
 
 class local_secretaria_test_unenrol_users extends local_secretaria_test_base {
 
@@ -447,9 +440,10 @@ class local_secretaria_test_unenrol_users extends local_secretaria_test_base {
         $this->moodle->shouldReceive('start_transaction')->once()->ordered();
         $this->moodle->shouldReceive('rollback_transaction')->once()->ordered();
 
-        $this->operations_throws('Unknown course', 'unenrol_users', array(
-            array('course' => 'course1', 'user' => 'user1', 'role' => 'role1')
-        ));
+        $this->expectException(new local_secretaria_exception('Unknown course'));
+        $this->operations->unenrol_users(array(
+            array('course' => 'course1', 'user' => 'user1', 'role' => 'role1'),
+       ));
     }
 
     function test_unknown_user() {
@@ -458,8 +452,9 @@ class local_secretaria_test_unenrol_users extends local_secretaria_test_base {
         $this->moodle->shouldReceive('start_transaction')->once()->ordered();
         $this->moodle->shouldReceive('rollback_transaction')->once()->ordered();
 
-        $this->operations_throws('Unknown user', 'unenrol_users', array(
-            array('course' => 'course1', 'user' => 'user1', 'role' => 'role1')
+        $this->expectException(new local_secretaria_exception('Unknown user'));
+        $this->operations->unenrol_users(array(
+            array('course' => 'course1', 'user' => 'user1', 'role' => 'role1'),
         ));
     }
 
@@ -469,11 +464,13 @@ class local_secretaria_test_unenrol_users extends local_secretaria_test_base {
         $this->moodle->shouldReceive('start_transaction')->once()->ordered();
         $this->moodle->shouldReceive('rollback_transaction')->once()->ordered();
 
-        $this->operations_throws('Unknown role', 'unenrol_users', array(
-            array('course' => 'course1', 'user' => 'user1', 'role' => 'role1')
+        $this->expectException(new local_secretaria_exception('Unknown role'));
+        $this->operations->unenrol_users(array(
+            array('course' => 'course1', 'user' => 'user1', 'role' => 'role1'),
         ));
     }
 }
+
 
 /* Groups */
 
@@ -511,21 +508,13 @@ class local_secretaria_test_get_groups extends local_secretaria_test_base {
     }
 
     function test_unknown_course() {
-        $this->operations_throws('Unknown course', 'get_groups', 'course1');
+        $this->expectException(new local_secretaria_exception('Unknown course'));
+        $this->operations->get_groups('course1');
     }
 }
 
-class local_secretaria_test_create_group extends local_secretaria_test_base {
 
-    function setUp() {
-        parent::setUp();
-        $this->moodle->shouldReceive('get_course_id')
-            ->with('course1')->andReturn(101)
-            ->byDefault();
-        $this->moodle->shouldReceive('get_group_id')
-            ->with(101, 'group1')->andReturn(false)
-            ->byDefault();
-    }
+class local_secretaria_test_create_group extends local_secretaria_test_base {
 
     function test() {
         $this->having_course_id('course1', 101);
@@ -537,16 +526,16 @@ class local_secretaria_test_create_group extends local_secretaria_test_base {
     }
 
     function test_unknown_course() {
-        $this->operations_throws('Unknown course', 'create_group',
-                                 'course1', 'group1', 'Group 1');
+        $this->expectException(new local_secretaria_exception('Unknown course'));
+        $this->operations->create_group('course1', 'group1', 'Group 1');
     }
 
     function test_duplicate_group() {
         $this->having_course_id('course1', 101);
         $this->having_group_id(101, 'group1', 201);
 
-        $this->operations_throws('Duplicate group', 'create_group',
-                                 'course1', 'group1', 'Group 1');
+        $this->expectException(new local_secretaria_exception('Duplicate group'));
+        $this->operations->create_group('course1', 'group1', 'Group 1');
     }
 }
 
@@ -563,12 +552,14 @@ class local_secretaria_test_delete_group extends local_secretaria_test_base {
     }
 
     function test_unknown_course() {
-        $this->operations_throws('Unknown course', 'delete_group', 'course1', 'group1');
+        $this->expectException(new local_secretaria_exception('Unknown course'));
+        $this->operations->delete_group('course1', 'group1');
     }
 
     function test_unknown_group() {
         $this->having_course_id('course1', 101);
-        $this->operations_throws('Unknown group', 'delete_group', 'course1', 'group1');
+        $this->expectException(new local_secretaria_exception('Unknown group'));
+        $this->operations->delete_group('course1', 'group1');
     }
 }
 
@@ -602,14 +593,14 @@ class local_secretaria_test_get_group_members extends local_secretaria_test_base
     }
 
     function test_unknown_course() {
-        $this->operations_throws('Unknown course', 'get_group_members',
-                                 'course1', 'group1');
+        $this->expectException(new local_secretaria_exception('Unknown course'));
+        $this->operations->get_group_members('course1', 'group1');
     }
 
     function test_unknown_group() {
         $this->having_course_id('course1', 101);
-        $this->operations_throws('Unknown group', 'get_group_members',
-                                 'course1', 'group1');
+        $this->expectException(new local_secretaria_exception('Unknown group'));
+        $this->operations->get_group_members('course1', 'group1');
     }
 }
 
@@ -632,14 +623,14 @@ class local_secretaria_test_add_group_members extends local_secretaria_test_base
     }
 
     function test_unknown_course() {
-        $this->operations_throws('Unknown course', 'add_group_members',
-                                 'course1', 'group1', array());
+        $this->expectException(new local_secretaria_exception('Unknown course'));
+        $this->operations->add_group_members('course1', 'group1', array());
     }
 
     function test_unknown_group() {
         $this->having_course_id('course1', 101);
-        $this->operations_throws('Unknown group', 'add_group_members',
-                                 'course1', 'group1', array());
+        $this->expectException(new local_secretaria_exception('Unknown group'));
+        $this->operations->add_group_members('course1', 'group1', array());
     }
 
     function test_unknown_user() {
@@ -648,8 +639,8 @@ class local_secretaria_test_add_group_members extends local_secretaria_test_base
         $this->moodle->shouldReceive('start_transaction')->once()->ordered();
         $this->moodle->shouldReceive('rollback_transaction')->once()->ordered();
 
-        $this->operations_throws('Unknown user', 'add_group_members',
-                                 'course1', 'group1', array('user1'));
+        $this->expectException(new local_secretaria_exception('Unknown user'));
+        $this->operations->add_group_members('course1', 'group1', array('user1'));
     }
 }
 
@@ -673,14 +664,14 @@ class local_secretaria_test_remove_group_members extends local_secretaria_test_b
     }
 
     function test_unknown_course() {
-        $this->operations_throws('Unknown course', 'remove_group_members',
-                                 'course1', 'group1', array());
+        $this->expectException(new local_secretaria_exception('Unknown course'));
+        $this->operations->remove_group_members('course1', 'group1', array());
     }
 
     function test_unknown_group() {
         $this->having_course_id('course1', 101);
-        $this->operations_throws('Unknown group', 'remove_group_members',
-                                 'course1', 'group1', array());
+        $this->expectException(new local_secretaria_exception('Unknown group'));
+        $this->operations->remove_group_members('course1', 'group1', array());
     }
 
     function test_unknown_user() {
@@ -689,10 +680,11 @@ class local_secretaria_test_remove_group_members extends local_secretaria_test_b
         $this->moodle->shouldReceive('start_transaction')->once()->ordered();
         $this->moodle->shouldReceive('rollback_transaction')->once()->ordered();
 
-        $this->operations_throws('Unknown user', 'remove_group_members',
-                                 'course1', 'group1', array('user1'));
+        $this->expectException(new local_secretaria_exception('Unknown user'));
+        $this->operations->remove_group_members('course1', 'group1', array('user1'));
     }
 }
+
 
 /* Grades */
 
@@ -786,16 +778,17 @@ class local_secretaria_test_get_course_grades extends local_secretaria_test_base
     }
 
     function test_unknown_course() {
-        $this->operations_throws('Unknown course', 'get_course_grades',
-                                 'course1', array('user1', 'user2'));
+        $this->expectException(new local_secretaria_exception('Unknown course'));
+        $this->operations->get_course_grades('course1', array('user1', 'user2'));
     }
 
     function test_unknown_user() {
         $this->having_course_id('course1', 101);
-        $this->operations_throws('Unknown user', 'get_course_grades',
-                                 'course1', array('user1', 'user2'));
+        $this->expectException(new local_secretaria_exception('Unknown user'));
+        $this->operations->get_course_grades('course1', array('user1', 'user2'));
     }
 }
+
 
 class local_secretaria_test_get_user_grades extends local_secretaria_test_base {
 
@@ -833,11 +826,12 @@ class local_secretaria_test_get_user_grades extends local_secretaria_test_base {
 
     function test_unknown_course() {
         $this->having_user_id('user1', 201);
-        $this->operations_throws('Unknown course', 'get_user_grades',
-                                 'user1', array('course1', 'course2'));
+        $this->expectException(new local_secretaria_exception('Unknown course'));
+        $this->operations->get_user_grades('user1', array('course1', 'course2'));
     }
 
     function test_unknown_user() {
-        $this->operations_throws('Unknown user', 'get_user_grades', 'user1', array());
+        $this->expectException(new local_secretaria_exception('Unknown user'));
+        $this->operations->get_user_grades('user1', array());
     }
 }

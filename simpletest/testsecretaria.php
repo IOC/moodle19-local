@@ -15,9 +15,7 @@ Mockery::getConfiguration()->allowMockingNonExistentMethods(false);
 abstract class local_secretaria_test_base extends UnitTestCase {
 
     protected $moodle;
-    protected $mockcfg;
-    protected $realcfg;
-    protected $service;
+    protected $operations;
 
     function having_course_id($shortname, $courseid) {
         $this->moodle->shouldReceive('get_course_id')
@@ -49,10 +47,10 @@ abstract class local_secretaria_test_base extends UnitTestCase {
             ->with($username)->andReturn($record);
     }
 
-    function service_throws($msg, $func) {
+    function operations_throws($msg, $func) {
         $args = array_slice(func_get_args(), 2);
         try {
-            call_user_func_array(array($this->service, $func), $args);
+            call_user_func_array(array($this->operations, $func), $args);
             $this->fail();
         } catch (local_secretaria_exception $e) {
             $this->assertEqual($e->getMessage(), $msg);
@@ -60,12 +58,8 @@ abstract class local_secretaria_test_base extends UnitTestCase {
     }
 
     function setUp() {
-        global $CFG;
-        $this->realcfg = $CFG;
-        $this->cfg = $CFG = new stdClass;
-
         $this->moodle = Mockery::mock('local_secretaria_moodle');
-        $this->service = new local_secretaria_service($this->moodle);
+        $this->operations = new local_secretaria_operations($this->moodle);
 
         $this->moodle->shouldReceive('get_context_id')
             ->andReturn(false)->byDefault();
@@ -82,53 +76,51 @@ abstract class local_secretaria_test_base extends UnitTestCase {
     }
 
     function tearDown() {
-        global $CFG;
-        $CFG = $this->realcfg;
         Mockery::close();
     }
 }
 
-class local_secretaria_test_valid_param extends local_secretaria_test_base {
+class local_secretaria_test_valid_param extends UnitTestCase {
 
     function test_string() {
         $param = array('type' => 'string');
-        $this->assertTrue($this->service->valid_param($param, 'abc'));
-        $this->assertFalse($this->service->valid_param($param, ''));
-        $this->assertFalse($this->service->valid_param($param, true));
-        $this->assertFalse($this->service->valid_param($param, 123));
-        $this->assertFalse($this->service->valid_param($param, array()));
+        $this->assertTrue(local_secretaria_service::valid_param($param, 'abc'));
+        $this->assertFalse(local_secretaria_service::valid_param($param, ''));
+        $this->assertFalse(local_secretaria_service::valid_param($param, true));
+        $this->assertFalse(local_secretaria_service::valid_param($param, 123));
+        $this->assertFalse(local_secretaria_service::valid_param($param, array()));
     }
 
     function test_string_optional() {
         $param = array('type' => 'string', 'optional' => true);
-        $this->assertTrue($this->service->valid_param($param, 'abc'));
-        $this->assertTrue($this->service->valid_param($param, ''));
+        $this->assertTrue(local_secretaria_service::valid_param($param, 'abc'));
+        $this->assertTrue(local_secretaria_service::valid_param($param, ''));
     }
 
     function test_list() {
         $param = array('type' => 'list', 'of' => array('type' => 'string'));
-        $this->assertTrue($this->service->valid_param($param, array()));
-        $this->assertTrue($this->service->valid_param($param, array('abc', 'def')));
-        $this->assertFalse($this->service->valid_param($param, array('abc', 123)));
-        $this->assertFalse($this->service->valid_param($param, true));
-        $this->assertFalse($this->service->valid_param($param, 123));
+        $this->assertTrue(local_secretaria_service::valid_param($param, array()));
+        $this->assertTrue(local_secretaria_service::valid_param($param, array('abc', 'def')));
+        $this->assertFalse(local_secretaria_service::valid_param($param, array('abc', 123)));
+        $this->assertFalse(local_secretaria_service::valid_param($param, true));
+        $this->assertFalse(local_secretaria_service::valid_param($param, 123));
     }
 
     function test_dictionary() {
         $param = array('type' => 'dictionary');
-        $this->assertTrue($this->service->valid_param($param, array()));
-        $this->assertTrue($this->service->valid_param($param, array('a' => 'A', 'b' => 'B')));
-        $this->assertFalse($this->service->valid_param($param, array('abc', 'def')));
-        $this->assertFalse($this->service->valid_param($param, array('a' => 1, 'b' => 2)));
-        $this->assertFalse($this->service->valid_param($param, true));
-        $this->assertFalse($this->service->valid_param($param, 123));
+        $this->assertTrue(local_secretaria_service::valid_param($param, array()));
+        $this->assertTrue(local_secretaria_service::valid_param($param, array('a' => 'A', 'b' => 'B')));
+        $this->assertFalse(local_secretaria_service::valid_param($param, array('abc', 'def')));
+        $this->assertFalse(local_secretaria_service::valid_param($param, array('a' => 1, 'b' => 2)));
+        $this->assertFalse(local_secretaria_service::valid_param($param, true));
+        $this->assertFalse(local_secretaria_service::valid_param($param, 123));
     }
 
     function test_dictionary_required() {
         $param = array('type' => 'dictionary', 'required' => array('a', 'b'));
-        $this->assertTrue($this->service->valid_param($param, array('a' => 'A', 'b' => 'B')));
-        $this->assertFalse($this->service->valid_param($param, array()));
-        $this->assertFalse($this->service->valid_param($param, array('a' => 'A')));
+        $this->assertTrue(local_secretaria_service::valid_param($param, array('a' => 'A', 'b' => 'B')));
+        $this->assertFalse(local_secretaria_service::valid_param($param, array()));
+        $this->assertFalse(local_secretaria_service::valid_param($param, array('a' => 'A')));
     }
 }
 
@@ -139,7 +131,6 @@ class local_secretaria_test_get_user extends local_secretaria_test_base {
 
     function setUp() {
         parent::setUp();
-        $this->cfg->wwwroot = 'http://example.org';
         $this->record = (object) array(
             'id' => 123,
             'username' => 'user',
@@ -150,31 +141,35 @@ class local_secretaria_test_get_user extends local_secretaria_test_base {
         );
     }
 
-    function test() {
+    function test_get_user() {
         $this->having_user_record('user', $this->record);
+        $this->moodle->shouldReceive('user_picture_url')->with(123)
+            ->andReturn('http://example.org/user/pix.php/123/f1.jpg');
 
-        $result = $this->service->get_user('user');
+        $result = $this->operations->get_user('user');
 
         $this->assertEqual($result, array(
             'username' => 'user',
             'firstname' => 'First',
             'lastname' => 'Last',
             'email' => 'user@example.org',
-            'picture' => "http://example.org/user/pix.php/123/f1.jpg",
+            'picture' => 'http://example.org/user/pix.php/123/f1.jpg',
         ));
     }
 
     function test_no_picture() {
         $this->record->picture = 0;
         $this->having_user_record('user', $this->record);
+        $this->moodle->shouldReceive('user_picture_url')->with(123)
+            ->andReturn('http://example.org/user/pix.php/123/f1.jpg');
 
-        $result = $this->service->get_user('user');
+        $result = $this->operations->get_user('user');
 
         $this->assertNull($result['picture']);
     }
 
     function test_unknown_user() {
-        $this->service_throws('Unknown user', 'get_user', 'user');
+        $this->operations_throws('Unknown user', 'get_user', 'user');
     }
 }
 
@@ -195,13 +190,13 @@ class local_secretaria_test_create_user extends local_secretaria_test_base {
         $this->moodle->shouldReceive('insert_user')
             ->with('user1', 'abc123', 'First', 'Last', 'user1@example.org')
             ->once()->andReturn(true);
-        $this->service->create_user($this->properties);
+        $this->operations->create_user($this->properties);
     }
 
     function test_duplicate_username() {
         $this->having_user_id('user1', 123);
-        $this->service_throws('Duplicate username', 'create_user',
-                              $this->properties);
+        $this->operations_throws('Duplicate username', 'create_user',
+                                 $this->properties);
     }
 }
 
@@ -224,7 +219,7 @@ class local_secretaria_test_update_user extends local_secretaria_test_base {
             ->with('user', Mockery::mustBe($record))
             ->once()->andReturn(true);
 
-        $this->service->update_user('user1', array(
+        $this->operations->update_user('user1', array(
             'username' => 'user2',
             'password' => 'abc123',
             'firstname' => 'First2',
@@ -236,7 +231,7 @@ class local_secretaria_test_update_user extends local_secretaria_test_base {
     function test_unknown_user() {
         $this->moodle->shouldReceive('get_user_id')
             ->with('user1')->andReturn(false);
-        $this->service_throws('Unknown user', 'update_user', 'user1', array());
+        $this->operations_throws('Unknown user', 'update_user', 'user1', array());
     }
 
     function test_duplicate_username() {
@@ -244,8 +239,8 @@ class local_secretaria_test_update_user extends local_secretaria_test_base {
             ->with('user1')->andReturn(123);
        $this->moodle->shouldReceive('get_user_id')
             ->with('user2')->andReturn(456);
-        $this->service_throws('Duplicate username', 'update_user',
-                              'user1', array('username' => 'user2'));
+        $this->operations_throws('Duplicate username', 'update_user',
+                                 'user1', array('username' => 'user2'));
     }
 
     function test_username_not_changed() {
@@ -255,7 +250,7 @@ class local_secretaria_test_update_user extends local_secretaria_test_base {
         $this->moodle->shouldReceive('update_record')
             ->with('user', Mockery::mustBe($record))
             ->once()->andReturn(true);
-        $this->service->update_user('user1', array('username' => 'user1'));
+        $this->operations->update_user('user1', array('username' => 'user1'));
     }
 }
 
@@ -273,11 +268,11 @@ class local_secretaria_test_delete_user extends local_secretaria_test_base {
             ->with(Mockery::mustBe($record))
             ->once()->andReturn(true);
 
-        $this->service->delete_user('user1');
+        $this->operations->delete_user('user1');
     }
 
     function test_unknown_user() {
-        $this->service_throws('Unknown user', 'delete_user', 'user1');
+        $this->operations_throws('Unknown user', 'delete_user', 'user1');
     }
 }
 
@@ -295,7 +290,7 @@ class local_secretaria_test_get_course_enrolments extends local_secretaria_test_
         $this->moodle->shouldReceive('get_role_assignments_by_context')
             ->with(123)->andReturn($records);
 
-        $result = $this->service->get_course_enrolments('course1');
+        $result = $this->operations->get_course_enrolments('course1');
 
         $this->assertEqual($result, array(
             array('user' => 'user1', 'role' => 'role1'),
@@ -308,13 +303,13 @@ class local_secretaria_test_get_course_enrolments extends local_secretaria_test_
         $this->moodle->shouldReceive('get_role_assignments_by_context')
             ->with(123)->andReturn(array());
 
-        $result = $this->service->get_course_enrolments('course1');
+        $result = $this->operations->get_course_enrolments('course1');
 
         $this->assertEqual($result, array());
     }
 
     function test_unknown_course() {
-        $this->service_throws('Unknown course', 'get_course_enrolments', 'course1');
+        $this->operations_throws('Unknown course', 'get_course_enrolments', 'course1');
     }
 }
 
@@ -329,7 +324,7 @@ class local_secretaria_test_get_user_enrolments extends local_secretaria_test_ba
         $this->moodle->shouldReceive('get_role_assignments_by_user')
             ->with(123)->andReturn($records);
 
-        $result = $this->service->get_user_enrolments('user1');
+        $result = $this->operations->get_user_enrolments('user1');
 
         $this->assertEqual($result, array(
             array('course' => 'course1', 'role' => 'role1'),
@@ -342,13 +337,13 @@ class local_secretaria_test_get_user_enrolments extends local_secretaria_test_ba
         $this->moodle->shouldReceive('get_role_assignments_by_user')
             ->with(123)->andReturn(array());
 
-        $result = $this->service->get_user_enrolments('user1');
+        $result = $this->operations->get_user_enrolments('user1');
 
         $this->assertEqual($result, array());
     }
 
     function test_unknown_user() {
-        $this->service_throws('Unknown user', 'get_user_enrolments', 'user1');
+        $this->operations_throws('Unknown user', 'get_user_enrolments', 'user1');
     }
 }
 
@@ -368,7 +363,7 @@ class local_secretaria_test_enrol_users extends local_secretaria_test_base {
         }
         $this->moodle->shouldReceive('commit_transaction')->once()->ordered();
 
-        $this->service->enrol_users(array(
+        $this->operations->enrol_users(array(
             array('course' => 'course1', 'user' => 'user1', 'role' => 'role1'),
             array('course' => 'course2', 'user' => 'user2', 'role' => 'role2'),
             array('course' => 'course3', 'user' => 'user3', 'role' => 'role3'),
@@ -384,7 +379,7 @@ class local_secretaria_test_enrol_users extends local_secretaria_test_base {
         $this->moodle->shouldReceive('start_transaction')->once()->ordered();
         $this->moodle->shouldReceive('commit_transaction')->once()->ordered();
 
-        $this->service->enrol_users(array(
+        $this->operations->enrol_users(array(
             array('course' => 'course1', 'user' => 'user1', 'role' => 'role1'),
         ));
     }
@@ -395,7 +390,7 @@ class local_secretaria_test_enrol_users extends local_secretaria_test_base {
         $this->moodle->shouldReceive('start_transaction')->once()->ordered();
         $this->moodle->shouldReceive('rollback_transaction')->once()->ordered();
 
-        $this->service_throws('Unknown course', 'enrol_users', array(
+        $this->operations_throws('Unknown course', 'enrol_users', array(
             array('course' => 'course1', 'user' => 'user1', 'role' => 'role1')
         ));
     }
@@ -406,7 +401,7 @@ class local_secretaria_test_enrol_users extends local_secretaria_test_base {
         $this->moodle->shouldReceive('start_transaction')->once()->ordered();
         $this->moodle->shouldReceive('rollback_transaction')->once()->ordered();
 
-        $this->service_throws('Unknown user', 'enrol_users', array(
+        $this->operations_throws('Unknown user', 'enrol_users', array(
             array('course' => 'course1', 'user' => 'user1', 'role' => 'role1')
         ));
     }
@@ -417,7 +412,7 @@ class local_secretaria_test_enrol_users extends local_secretaria_test_base {
         $this->moodle->shouldReceive('start_transaction')->once()->ordered();
         $this->moodle->shouldReceive('rollback_transaction')->once()->ordered();
 
-        $this->service_throws('Unknown role', 'enrol_users', array(
+        $this->operations_throws('Unknown role', 'enrol_users', array(
             array('course' => 'course1', 'user' => 'user1', 'role' => 'role1')
         ));
     }
@@ -439,7 +434,7 @@ class local_secretaria_test_unenrol_users extends local_secretaria_test_base {
         }
         $this->moodle->shouldReceive('commit_transaction')->once()->ordered();
 
-        $this->service->unenrol_users(array(
+        $this->operations->unenrol_users(array(
             array('course' => 'course1', 'user' => 'user1', 'role' => 'role1'),
             array('course' => 'course2', 'user' => 'user2', 'role' => 'role2'),
             array('course' => 'course3', 'user' => 'user3', 'role' => 'role3'),
@@ -452,7 +447,7 @@ class local_secretaria_test_unenrol_users extends local_secretaria_test_base {
         $this->moodle->shouldReceive('start_transaction')->once()->ordered();
         $this->moodle->shouldReceive('rollback_transaction')->once()->ordered();
 
-        $this->service_throws('Unknown course', 'unenrol_users', array(
+        $this->operations_throws('Unknown course', 'unenrol_users', array(
             array('course' => 'course1', 'user' => 'user1', 'role' => 'role1')
         ));
     }
@@ -463,7 +458,7 @@ class local_secretaria_test_unenrol_users extends local_secretaria_test_base {
         $this->moodle->shouldReceive('start_transaction')->once()->ordered();
         $this->moodle->shouldReceive('rollback_transaction')->once()->ordered();
 
-        $this->service_throws('Unknown user', 'unenrol_users', array(
+        $this->operations_throws('Unknown user', 'unenrol_users', array(
             array('course' => 'course1', 'user' => 'user1', 'role' => 'role1')
         ));
     }
@@ -474,7 +469,7 @@ class local_secretaria_test_unenrol_users extends local_secretaria_test_base {
         $this->moodle->shouldReceive('start_transaction')->once()->ordered();
         $this->moodle->shouldReceive('rollback_transaction')->once()->ordered();
 
-        $this->service_throws('Unknown role', 'unenrol_users', array(
+        $this->operations_throws('Unknown role', 'unenrol_users', array(
             array('course' => 'course1', 'user' => 'user1', 'role' => 'role1')
         ));
     }
@@ -497,7 +492,7 @@ class local_secretaria_test_get_groups extends local_secretaria_test_base {
         $this->moodle->shouldReceive('get_groups')
             ->with(101)->andReturn($records);
 
-        $result = $this->service->get_groups('course1');
+        $result = $this->operations->get_groups('course1');
 
         $this->assertEqual($result, array(
             array('name' => 'group1', 'description' => 'first group'),
@@ -510,13 +505,13 @@ class local_secretaria_test_get_groups extends local_secretaria_test_base {
         $this->moodle->shouldReceive('get_groups')
             ->with(101)->andReturn(false);
 
-        $result = $this->service->get_groups('course1');
+        $result = $this->operations->get_groups('course1');
 
         $this->assertEqual($result, array());
     }
 
     function test_unknown_course() {
-        $this->service_throws('Unknown course', 'get_groups', 'course1');
+        $this->operations_throws('Unknown course', 'get_groups', 'course1');
     }
 }
 
@@ -538,20 +533,20 @@ class local_secretaria_test_create_group extends local_secretaria_test_base {
             ->with(101, 'group1', 'Group 1')
             ->once()->andReturn(true);
 
-        $this->service->create_group('course1', 'group1', 'Group 1');
+        $this->operations->create_group('course1', 'group1', 'Group 1');
     }
 
     function test_unknown_course() {
-        $this->service_throws('Unknown course', 'create_group',
-                              'course1', 'group1', 'Group 1');
+        $this->operations_throws('Unknown course', 'create_group',
+                                 'course1', 'group1', 'Group 1');
     }
 
     function test_duplicate_group() {
         $this->having_course_id('course1', 101);
         $this->having_group_id(101, 'group1', 201);
 
-        $this->service_throws('Duplicate group', 'create_group',
-                              'course1', 'group1', 'Group 1');
+        $this->operations_throws('Duplicate group', 'create_group',
+                                 'course1', 'group1', 'Group 1');
     }
 }
 
@@ -564,16 +559,16 @@ class local_secretaria_test_delete_group extends local_secretaria_test_base {
         $this->moodle->shouldReceive('groups_delete_group')
             ->with(201)->andReturn(true)->once();
 
-        $this->service->delete_group('course1', 'group1');
+        $this->operations->delete_group('course1', 'group1');
     }
 
     function test_unknown_course() {
-        $this->service_throws('Unknown course', 'delete_group', 'course1', 'group1');
+        $this->operations_throws('Unknown course', 'delete_group', 'course1', 'group1');
     }
 
     function test_unknown_group() {
         $this->having_course_id('course1', 101);
-        $this->service_throws('Unknown group', 'delete_group', 'course1', 'group1');
+        $this->operations_throws('Unknown group', 'delete_group', 'course1', 'group1');
     }
 }
 
@@ -590,7 +585,7 @@ class local_secretaria_test_get_group_members extends local_secretaria_test_base
         $this->moodle->shouldReceive('get_group_members')
             ->with(201)->andReturn($records);
 
-        $result = $this->service->get_group_members('course1', 'group1');
+        $result = $this->operations->get_group_members('course1', 'group1');
 
         $this->assertEqual($result, array('user1', 'user2'));
     }
@@ -601,20 +596,20 @@ class local_secretaria_test_get_group_members extends local_secretaria_test_base
         $this->moodle->shouldReceive('get_group_members')
             ->with(201)->andReturn(false);
 
-        $result = $this->service->get_group_members('course1', 'group1');
+        $result = $this->operations->get_group_members('course1', 'group1');
 
         $this->assertEqual($result, array());
     }
 
     function test_unknown_course() {
-        $this->service_throws('Unknown course', 'get_group_members',
-                              'course1', 'group1');
+        $this->operations_throws('Unknown course', 'get_group_members',
+                                 'course1', 'group1');
     }
 
     function test_unknown_group() {
         $this->having_course_id('course1', 101);
-        $this->service_throws('Unknown group', 'get_group_members',
-                              'course1', 'group1');
+        $this->operations_throws('Unknown group', 'get_group_members',
+                                 'course1', 'group1');
     }
 }
 
@@ -633,18 +628,18 @@ class local_secretaria_test_add_group_members extends local_secretaria_test_base
             ->with(201, 302)->andReturn(true)->once()->ordered();
         $this->moodle->shouldReceive('commit_transaction')->once()->ordered();
 
-        $this->service->add_group_members('course1', 'group1', array('user1', 'user2'));
+        $this->operations->add_group_members('course1', 'group1', array('user1', 'user2'));
     }
 
     function test_unknown_course() {
-        $this->service_throws('Unknown course', 'add_group_members',
-                              'course1', 'group1', array());
+        $this->operations_throws('Unknown course', 'add_group_members',
+                                 'course1', 'group1', array());
     }
 
     function test_unknown_group() {
         $this->having_course_id('course1', 101);
-        $this->service_throws('Unknown group', 'add_group_members',
-                              'course1', 'group1', array());
+        $this->operations_throws('Unknown group', 'add_group_members',
+                                 'course1', 'group1', array());
     }
 
     function test_unknown_user() {
@@ -653,8 +648,8 @@ class local_secretaria_test_add_group_members extends local_secretaria_test_base
         $this->moodle->shouldReceive('start_transaction')->once()->ordered();
         $this->moodle->shouldReceive('rollback_transaction')->once()->ordered();
 
-        $this->service_throws('Unknown user', 'add_group_members',
-                              'course1', 'group1', array('user1'));
+        $this->operations_throws('Unknown user', 'add_group_members',
+                                 'course1', 'group1', array('user1'));
     }
 }
 
@@ -673,19 +668,19 @@ class local_secretaria_test_remove_group_members extends local_secretaria_test_b
             ->with(201, 302)->once()->ordered();
         $this->moodle->shouldReceive('commit_transaction')->once()->ordered();
 
-        $result = $this->service->remove_group_members(
+        $result = $this->operations->remove_group_members(
             'course1', 'group1', array('user1', 'user2'));
     }
 
     function test_unknown_course() {
-        $this->service_throws('Unknown course', 'remove_group_members',
-                              'course1', 'group1', array());
+        $this->operations_throws('Unknown course', 'remove_group_members',
+                                 'course1', 'group1', array());
     }
 
     function test_unknown_group() {
         $this->having_course_id('course1', 101);
-        $this->service_throws('Unknown group', 'remove_group_members',
-                              'course1', 'group1', array());
+        $this->operations_throws('Unknown group', 'remove_group_members',
+                                 'course1', 'group1', array());
     }
 
     function test_unknown_user() {
@@ -694,8 +689,8 @@ class local_secretaria_test_remove_group_members extends local_secretaria_test_b
         $this->moodle->shouldReceive('start_transaction')->once()->ordered();
         $this->moodle->shouldReceive('rollback_transaction')->once()->ordered();
 
-        $this->service_throws('Unknown user', 'remove_group_members',
-                              'course1', 'group1', array('user1'));
+        $this->operations_throws('Unknown user', 'remove_group_members',
+                                 'course1', 'group1', array('user1'));
     }
 }
 
@@ -755,7 +750,7 @@ class local_secretaria_test_get_course_grades extends local_secretaria_test_base
             ->with(101, 'module', 'assignment', 401, array(201, 202))
             ->andReturn($grades_module);
 
-        $result = $this->service->get_course_grades(
+        $result = $this->operations->get_course_grades(
             'course1', array('user1', 'user2'));
 
         $this->assertEqual($result, array(
@@ -784,21 +779,21 @@ class local_secretaria_test_get_course_grades extends local_secretaria_test_base
         $this->moodle->shouldReceive('grade_item_fetch_all')
             ->with(101)->andReturn(false);
 
-        $result = $this->service->get_course_grades(
+        $result = $this->operations->get_course_grades(
             'course1', array('user1', 'user2'));
 
         $this->assertIdentical($result, array());
     }
 
     function test_unknown_course() {
-        $this->service_throws('Unknown course', 'get_course_grades',
-                              'course1', array('user1', 'user2'));
+        $this->operations_throws('Unknown course', 'get_course_grades',
+                                 'course1', array('user1', 'user2'));
     }
 
     function test_unknown_user() {
         $this->having_course_id('course1', 101);
-        $this->service_throws('Unknown user', 'get_course_grades',
-                              'course1', array('user1', 'user2'));
+        $this->operations_throws('Unknown user', 'get_course_grades',
+                                 'course1', array('user1', 'user2'));
     }
 }
 
@@ -816,7 +811,7 @@ class local_secretaria_test_get_user_grades extends local_secretaria_test_base {
         $this->moodle->shouldReceive('grade_get_course_grade')
             ->with(201, 102)->andReturn($grade2);
 
-        $result = $this->service->get_user_grades(
+        $result = $this->operations->get_user_grades(
             'user1', array('course1', 'course2'));
 
         $this->assertEqual($result, array(
@@ -831,18 +826,18 @@ class local_secretaria_test_get_user_grades extends local_secretaria_test_base {
         $this->moodle->shouldReceive('grade_get_course_grade')
             ->with(201, 101)->andReturn(false);
 
-        $result = $this->service->get_user_grades('user1', array('course1'));
+        $result = $this->operations->get_user_grades('user1', array('course1'));
 
         $this->assertIdentical($result, array('course1' => null));
     }
 
     function test_unknown_course() {
         $this->having_user_id('user1', 201);
-        $this->service_throws('Unknown course', 'get_user_grades',
-                              'user1', array('course1', 'course2'));
+        $this->operations_throws('Unknown course', 'get_user_grades',
+                                 'user1', array('course1', 'course2'));
     }
 
     function test_unknown_user() {
-        $this->service_throws('Unknown user', 'get_user_grades', 'user1', array());
+        $this->operations_throws('Unknown user', 'get_user_grades', 'user1', array());
     }
 }

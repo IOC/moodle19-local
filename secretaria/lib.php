@@ -134,25 +134,25 @@ class local_secretaria_service {
     private $add_group_members_parameters = array(
         'course' => array('type' => 'string'),
         'name' => array('type' => 'string'),
-        'users' => array('type' => 'list', 'of' => 'string'),
+        'users' => array('type' => 'list', 'of' => array('type' => 'string')),
     );
 
     private $remove_group_members_parameters = array(
         'course' => array('type' => 'string'),
         'name' => array('type' => 'string'),
-        'users' => array('type' => 'list', 'of' => 'string'),
+        'users' => array('type' => 'list', 'of' => array('type' => 'string')),
     );
 
     /* Grades */
 
     private $get_course_grades_parameters = array(
         'course' => array('type' => 'string'),
-        'users' => array('type' => 'list', 'of' => 'string'),
+        'users' => array('type' => 'list', 'of' => array('type' => 'string')),
     );
 
     private $get_user_grades_parameters = array(
         'user' => array('type' => 'string'),
-        'courses' => array('type' => 'list', 'of' => 'string'),
+        'courses' => array('type' => 'list', 'of' => array('type' => 'string')),
     );
 }
 
@@ -160,6 +160,25 @@ class local_secretaria_moodle {
 
     function commit_transaction() {
         commit_sql();
+    }
+
+    function create_user($auth, $mnethostid, $username, $password,
+                         $firstname, $lastname, $email) {
+
+        $record = new object;
+        $record->auth = $auth;
+        $record->mnethostid = $mnethostid;
+        $record->username = $username;
+        $record->password = hash_internal_user_password($password);
+        $record->firstname = $firstname;
+        $record->lastname = $lastname;
+        $record->email = $email;
+        $record->deleted = 0;
+        $record->confirmed = 1;
+        $record->lang = 'ca_utf8';
+        $record->timemodified = time();
+
+        return (bool) insert_record('user', $record);
     }
 
     function delete_user($record) {
@@ -189,13 +208,13 @@ class local_secretaria_moodle {
         return get_field('groups', 'id', 'courseid', $courseid, 'name', addslashes($name));
     }
 
-    function get_group_members($groupid) {
+    function get_group_members($groupid, $mnethostid) {
         global $CFG;
         $sql = sprintf("SELECT DISTINCT u.id, u.username " .
                        "FROM {$CFG->prefix}groups_members gm " .
                        "JOIN {$CFG->prefix}user u ON u.id = gm.userid " .
                        "WHERE gm.groupid = %d AND u.mnethostid = %d AND u.deleted = 0",
-                       $groupid, $CFG->mnet_localhost_id);
+                       $groupid, $mnethostid);
         return get_records_sql($sql);
     }
 
@@ -203,14 +222,14 @@ class local_secretaria_moodle {
         return get_records('groups', 'courseid', $courseid);
     }
 
-    function get_role_assignments_by_context($contextid) {
+    function get_role_assignments_by_context($contextid, $mnethostid) {
         global $CFG;
         $sql = sprintf("SELECT ra.id, u.username AS user, r.shortname AS role " .
                        "FROM {$CFG->prefix}role_assignments ra " .
                        "JOIN {$CFG->prefix}user u ON u.id = ra.userid " .
                        "JOIN {$CFG->prefix}role r ON r.id = ra.roleid " .
                        "WHERE ra.contextid = %d AND u.mnethostid = %d AND u.deleted = 0",
-                       $contextid, $CFG->mnet_localhost_id);
+                       $contextid, $mnethostid);
         return get_records_sql($sql);
     }
 
@@ -230,17 +249,15 @@ class local_secretaria_moodle {
         return get_field('role', 'id', 'shortname', addslashes($role));
     }
 
-    function get_user_id($username) {
-        global $CFG;
+    function get_user_id($mnethostid, $username) {
         $select = sprintf("username = '%s' AND mnethostid = %d AND deleted = 0",
-                          addslashes($username), $CFG->mnet_localhost_id);
+                          addslashes($username), $mnethostid);
         return get_field_select('user', 'id', $select);
     }
 
-    function get_user_record($username) {
-        global $CFG;
-        $select = sprintf("username = '%s' AND mnethostid = %d AND deleted = 0",
-                          addslashes($username), $CFG->mnet_localhost_id);
+    function get_user_record($mnethostid, $username) {
+        $select = sprintf("mnethostid = %d AND username = '%s' AND deleted = 0",
+                          $mnethostid, addslashes($username));
         return get_record_select('user', $select);
     }
 
@@ -299,22 +316,13 @@ class local_secretaria_moodle {
         return (bool) insert_record('role_assignments', addslashes_recursive($record));
     }
 
-    function insert_user($username, $password, $firstname, $lastname, $email) {
+    function mnet_host_id() {
+        return $this->mnet_localhost_id();
+    }
+
+    function mnet_localhost_id() {
         global $CFG;
-
-        $record = new object;
-        $record->username = $username;
-        $record->password = hash_internal_user_password($password);
-        $record->firstname = $firstname;
-        $record->lastname = $lastname;
-        $record->email = $email;
-        $record->mnethostid = $CFG->mnet_localhost_id;
-        $record->deleted = 0;
-        $record->confirmed = 1;
-        $record->lang = 'ca_utf8';
-        $record->timemodified = time();
-
-        return (bool) insert_record('user', $record);
+        return (int) $CFG->mnet_localhost_id;
     }
 
     function role_assignment_exists($contextid, $userid, $roleid) {

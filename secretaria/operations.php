@@ -12,7 +12,9 @@ class local_secretaria_operations {
     /* Users */
 
     function get_user($username) {
-        if (!$record = $this->moodle->get_user_record($username)) {
+        $mnethostid = $this->moodle->mnet_host_id();
+
+        if (!$record = $this->moodle->get_user_record($mnethostid, $username)) {
             throw new local_secretaria_exception('Unknown user');
         }
 
@@ -29,11 +31,17 @@ class local_secretaria_operations {
 
 
     function create_user($properties) {
-        if ($this->moodle->get_user_id($properties['username'])) {
+        $mnethostid = $this->moodle->mnet_host_id();
+        $mnetlocalhostid = $this->moodle->mnet_localhost_id();
+        $auth = ($mnethostid == $mnetlocalhostid ? 'manual' : 'mnet');
+
+        if ($this->moodle->get_user_id($mnethostid, $properties['username'])) {
             throw new local_secretaria_exception('Duplicate username');
         }
 
-       $this->moodle->insert_user(
+        $this->moodle->create_user(
+            $auth,
+            $mnethostid,
             $properties['username'],
             $properties['password'],
             $properties['firstname'],
@@ -44,13 +52,14 @@ class local_secretaria_operations {
 
     function update_user($username, $properties) {
         $record = new stdClass;
+        $mnethostid = $this->moodle->mnet_host_id();
 
-        if (!$record->id = $this->moodle->get_user_id($username)) {
+        if (!$record->id = $this->moodle->get_user_id($mnethostid, $username)) {
             throw new local_secretaria_exception('Unknown user');
         }
 
         if (!empty($properties['username']) and $properties['username'] != $username) {
-            if ($this->moodle->get_user_id($properties['username'])) {
+            if ($this->moodle->get_user_id($mnethostid, $properties['username'])) {
                 throw new local_secretaria_exception('Duplicate username');
             }
             $record->username = $properties['username'];
@@ -72,7 +81,8 @@ class local_secretaria_operations {
     }
 
     function delete_user($username) {
-        if (!$record = $this->moodle->get_user_record($username)) {
+        $mnethostid = $this->moodle->mnet_host_id();
+        if (!$record = $this->moodle->get_user_record($mnethostid, $username)) {
             throw new local_secretaria_exception('Unknown user');
         }
         $this->moodle->delete_user($record);
@@ -81,12 +91,14 @@ class local_secretaria_operations {
     /* Enrolments */
 
     function get_course_enrolments($course) {
+        $mnethostid = $this->moodle->mnet_host_id();
+
         if (!$contextid = $this->moodle->get_context_id($course)) {
             throw new local_secretaria_exception('Unknown course');
         }
 
         $enrolments = array();
-        if ($records = $this->moodle->get_role_assignments_by_context($contextid)) {
+        if ($records = $this->moodle->get_role_assignments_by_context($contextid, $mnethostid)) {
             foreach ($records as $record) {
                 $enrolments[] = array('user' => $record->user, 'role' => $record->role);
             }
@@ -96,7 +108,9 @@ class local_secretaria_operations {
     }
 
     function get_user_enrolments($username) {
-        if (!$userid = $this->moodle->get_user_id($username)) {
+        $mnethostid = $this->moodle->mnet_host_id();
+
+        if (!$userid = $this->moodle->get_user_id($mnethostid, $username)) {
             throw new local_secretaria_exception('Unknown user');
         }
 
@@ -111,6 +125,8 @@ class local_secretaria_operations {
     }
 
     function enrol_users($enrolments) {
+        $mnethostid = $this->moodle->mnet_host_id();
+
         $this->moodle->start_transaction();
 
         foreach ($enrolments as $enrolment) {
@@ -118,7 +134,7 @@ class local_secretaria_operations {
                 $this->moodle->rollback_transaction();
                 throw new local_secretaria_exception('Unknown course');
             }
-            if (!$userid = $this->moodle->get_user_id($enrolment['user'])) {
+            if (!$userid = $this->moodle->get_user_id($mnethostid, $enrolment['user'])) {
                 $this->moodle->rollback_transaction();
                 throw new local_secretaria_exception('Unknown user');
             }
@@ -135,6 +151,8 @@ class local_secretaria_operations {
     }
 
     function unenrol_users($enrolments) {
+        $mnethostid = $this->moodle->mnet_host_id();
+
         $this->moodle->start_transaction();
 
         foreach ($enrolments as $enrolment) {
@@ -142,7 +160,7 @@ class local_secretaria_operations {
                 $this->moodle->rollback_transaction();
                 throw new local_secretaria_exception('Unknown course');
             }
-            if (!$userid = $this->moodle->get_user_id($enrolment['user'])) {
+            if (!$userid = $this->moodle->get_user_id($mnethostid, $enrolment['user'])) {
                 $this->moodle->rollback_transaction();
                 throw new local_secretaria_exception('Unknown user');
             }
@@ -196,6 +214,8 @@ class local_secretaria_operations {
     }
 
     function get_group_members($course, $name) {
+        $mnethostid = $this->moodle->mnet_host_id();
+
         if (!$courseid = $this->moodle->get_course_id($course)) {
             throw new local_secretaria_exception('Unknown course');
         }
@@ -203,7 +223,7 @@ class local_secretaria_operations {
             throw new local_secretaria_exception('Unknown group');
         }
         $users = array();
-        if ($records = $this->moodle->get_group_members($groupid)) {
+        if ($records = $this->moodle->get_group_members($groupid, $mnethostid)) {
             foreach ($records as $record) {
                 $users[] = $record->username;
             }
@@ -212,6 +232,8 @@ class local_secretaria_operations {
     }
 
     function add_group_members($course, $name, $users) {
+        $mnethostid = $this->moodle->mnet_host_id();
+
         if (!$courseid = $this->moodle->get_course_id($course)) {
             throw new local_secretaria_exception('Unknown course');
        }
@@ -222,7 +244,7 @@ class local_secretaria_operations {
         $this->moodle->start_transaction();
 
         foreach ($users as $user) {
-            if (!$userid = $this->moodle->get_user_id($user)) {
+            if (!$userid = $this->moodle->get_user_id($mnethostid, $user)) {
                 $this->moodle->rollback_transaction();
                 throw new local_secretaria_exception('Unknown user');
             }
@@ -233,6 +255,8 @@ class local_secretaria_operations {
     }
 
     function remove_group_members($course, $name, $users) {
+        $mnethostid = $this->moodle->mnet_host_id();
+
         if (!$courseid = $this->moodle->get_course_id($course)) {
             throw new local_secretaria_exception('Unknown course');
         }
@@ -243,7 +267,7 @@ class local_secretaria_operations {
         $this->moodle->start_transaction();
 
         foreach ($users as $user) {
-            if (!$userid = $this->moodle->get_user_id($user)) {
+            if (!$userid = $this->moodle->get_user_id($mnethostid, $user)) {
                 $this->moodle->rollback_transaction();
                 throw new local_secretaria_exception('Unknown user');
             }
@@ -256,13 +280,15 @@ class local_secretaria_operations {
     /* Grades */
 
     function get_course_grades($course, $users) {
+        $mnethostid = $this->moodle->mnet_host_id();
+
         if (!$courseid = $this->moodle->get_course_id($course)) {
             throw new local_secretaria_exception('Unknown course');
         }
 
         $usernames = array();
         foreach ($users as $user) {
-            if (!$userid = $this->moodle->get_user_id($user)) {
+            if (!$userid = $this->moodle->get_user_id($mnethostid, $user)) {
                 throw new local_secretaria_exception('Unknown user');
             }
             $usernames[$userid] = $user;
@@ -295,7 +321,9 @@ class local_secretaria_operations {
     }
 
     function get_user_grades($user, $courses)  {
-        if (!$userid = $this->moodle->get_user_id($user)) {
+        $mnethostid = $this->moodle->mnet_host_id();
+
+        if (!$userid = $this->moodle->get_user_id($mnethostid, $user)) {
             throw new local_secretaria_exception('Unknown user');
         }
 

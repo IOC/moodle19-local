@@ -178,7 +178,7 @@ class local_secretaria_moodle {
         $record->lang = 'ca_utf8';
         $record->timemodified = time();
 
-        return (bool) insert_record('user', $record);
+        insert_record('user', $record);
     }
 
     function delete_user($record) {
@@ -302,7 +302,7 @@ class local_secretaria_moodle {
         $record->description = $description;
         $record->timemodified = time();
         $record->timecreated = time();
-        return (bool) insert_record('groups', addslashes_recursive($record));
+        insert_record('groups', addslashes_recursive($record));
     }
 
     function insert_role_assignment($contextid, $userid, $roleid) {
@@ -313,7 +313,7 @@ class local_secretaria_moodle {
             'enrol' => 'manual',
             'timemodified' => time(),
         );
-        return (bool) insert_record('role_assignments', addslashes_recursive($record));
+        insert_record('role_assignments', addslashes_recursive($record));
     }
 
     function mnet_host_id() {
@@ -338,8 +338,13 @@ class local_secretaria_moodle {
         begin_sql();
     }
 
+    function update_user_password($userid, $password) {
+        $record = get_record('user', 'id', $userid);
+        update_internal_user_password($record, $password);
+    }
+
     function update_record($table, $record) {
-        return (bool) update_record($table, addslashes_recursive($record));
+        update_record($table, addslashes_recursive($record));
     }
 
     function user_picture_url($userid) {

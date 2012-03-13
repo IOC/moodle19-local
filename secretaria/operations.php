@@ -39,6 +39,7 @@ class local_secretaria_operations {
             throw new local_secretaria_exception('Duplicate username');
         }
 
+        $this->moodle->start_transaction();
         $this->moodle->create_user(
             $auth,
             $mnethostid,
@@ -48,6 +49,7 @@ class local_secretaria_operations {
             $properties['lastname'],
             $properties['email']
         );
+        $this->moodle->commit_transaction();
     }
 
     function update_user($username, $properties) {
@@ -64,9 +66,6 @@ class local_secretaria_operations {
             }
             $record->username = $properties['username'];
         }
-        if (!empty($properties['password'])) {
-            $record->password = hash_internal_user_password($properties['password']);
-        }
         if (!empty($properties['firstname'])) {
             $record->firstname = $properties['firstname'];
         }
@@ -77,7 +76,12 @@ class local_secretaria_operations {
             $record->email = $properties['email'];
         }
 
+        $this->moodle->start_transaction();
         $this->moodle->update_record('user', $record);
+        if (!empty($properties['password'])) {
+            $this->moodle->update_user_password($record->id, $properties['password']);
+        }
+        $this->moodle->commit_transaction();
     }
 
     function delete_user($username) {
@@ -85,7 +89,9 @@ class local_secretaria_operations {
         if (!$record = $this->moodle->get_user_record($mnethostid, $username)) {
             throw new local_secretaria_exception('Unknown user');
         }
+        $this->moodle->start_transaction();
         $this->moodle->delete_user($record);
+        $this->moodle->commit_transaction();
     }
 
     /* Enrolments */
@@ -200,7 +206,9 @@ class local_secretaria_operations {
         if ($this->moodle->get_group_id($courseid, $name)) {
             throw new local_secretaria_exception('Duplicate group');
         }
+        $this->moodle->start_transaction();
         $this->moodle->insert_group($courseid, $name, $description);
+        $this->moodle->commit_transaction();
     }
 
     function delete_group($course, $name) {
@@ -210,7 +218,9 @@ class local_secretaria_operations {
         if (!$groupid = $this->moodle->get_group_id($courseid, $name)) {
             throw new local_secretaria_exception('Unknown group');
         }
+        $this->moodle->start_transaction();
         $this->moodle->groups_delete_group($groupid);
+        $this->moodle->commit_transaction();
     }
 
     function get_group_members($course, $name) {

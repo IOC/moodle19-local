@@ -173,6 +173,7 @@ class local_secretaria_moodle {
 
     function create_user($auth, $mnethostid, $username, $password,
                          $firstname, $lastname, $email) {
+        global $CFG;
 
         $record = new object;
         $record->auth = $auth;
@@ -184,7 +185,7 @@ class local_secretaria_moodle {
         $record->email = $email;
         $record->deleted = 0;
         $record->confirmed = 1;
-        $record->lang = 'ca_utf8';
+        $record->lang = $CFG->lang;
         $record->timemodified = time();
 
         insert_record('user', $record);

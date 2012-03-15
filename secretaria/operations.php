@@ -137,15 +137,12 @@ class local_secretaria_operations {
 
         foreach ($enrolments as $enrolment) {
             if (!$courseid = $this->moodle->get_course_id($enrolment['course'])) {
-                $this->moodle->rollback_transaction();
                 throw new local_secretaria_exception('Unknown course');
             }
             if (!$userid = $this->moodle->get_user_id($mnethostid, $enrolment['user'])) {
-                $this->moodle->rollback_transaction();
                 throw new local_secretaria_exception('Unknown user');
             }
             if (!$roleid = $this->moodle->get_role_id($enrolment['role'])) {
-                $this->moodle->rollback_transaction();
                 throw new local_secretaria_exception('Unknown role');
             }
             if (!$this->moodle->role_assignment_exists($courseid, $userid, $roleid)) {
@@ -163,15 +160,12 @@ class local_secretaria_operations {
 
         foreach ($enrolments as $enrolment) {
             if (!$courseid = $this->moodle->get_course_id($enrolment['course'])) {
-                $this->moodle->rollback_transaction();
                 throw new local_secretaria_exception('Unknown course');
             }
             if (!$userid = $this->moodle->get_user_id($mnethostid, $enrolment['user'])) {
-                $this->moodle->rollback_transaction();
                 throw new local_secretaria_exception('Unknown user');
             }
             if (!$roleid = $this->moodle->get_role_id($enrolment['role'])) {
-                $this->moodle->rollback_transaction();
                 throw new local_secretaria_exception('Unknown role');
             }
             $this->moodle->delete_role_assignment($courseid, $userid, $roleid);
@@ -255,7 +249,6 @@ class local_secretaria_operations {
 
         foreach ($users as $user) {
             if (!$userid = $this->moodle->get_user_id($mnethostid, $user)) {
-                $this->moodle->rollback_transaction();
                 throw new local_secretaria_exception('Unknown user');
             }
             $this->moodle->groups_add_member($groupid, $userid);
@@ -278,7 +271,6 @@ class local_secretaria_operations {
 
         foreach ($users as $user) {
             if (!$userid = $this->moodle->get_user_id($mnethostid, $user)) {
-                $this->moodle->rollback_transaction();
                 throw new local_secretaria_exception('Unknown user');
             }
             $this->moodle->groups_remove_member($groupid, $userid);

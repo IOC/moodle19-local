@@ -6,11 +6,12 @@ require_once($CFG->dirroot . '/local/secretaria/operations.php');
 
 class local_secretaria_service {
 
+    private $moodle;
     private $operations;
 
     function __construct() {
-        $moodle = new local_secretaria_moodle;
-        $this->operations = new local_secretaria_operations($moodle);
+        $this->moodle = new local_secretaria_moodle;
+        $this->operations = new local_secretaria_operations($this->moodle);
     }
 
     function execute($func, $args) {
@@ -29,7 +30,12 @@ class local_secretaria_service {
             }
             $arg = next($args);
         }
-        return call_user_func_array(array($this->operations, $func), $args);
+        try {
+            return call_user_func_array(array($this->operations, $func), $args);
+        } catch (Exception $e) {
+            $this->moodle->rollback_transaction($e);
+            throw $e;
+        }
     }
 
     static function valid_param($param, $value) {
@@ -158,8 +164,11 @@ class local_secretaria_service {
 
 class local_secretaria_moodle {
 
+    private $transaction = false;
+
     function commit_transaction() {
         commit_sql();
+        $this->transaction = false;
     }
 
     function create_user($auth, $mnethostid, $username, $password,
@@ -324,12 +333,16 @@ class local_secretaria_moodle {
                              'userid', $userid, 'roleid', $roleid);
     }
 
-    function rollback_transaction() {
-        rollback_sql();
+    function rollback_transaction(Exception $e) {
+        if ($this->transaction) {
+            rollback_sql();
+            $this->transaction = false;
+        }
     }
 
     function start_transaction() {
         begin_sql();
+        $this->transaction = true;
     }
 
     function update_user_password($userid, $password) {

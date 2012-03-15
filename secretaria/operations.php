@@ -99,12 +99,12 @@ class local_secretaria_operations {
     function get_course_enrolments($course) {
         $mnethostid = $this->moodle->mnet_host_id();
 
-        if (!$contextid = $this->moodle->get_context_id($course)) {
+        if (!$courseid = $this->moodle->get_course_id($course)) {
             throw new local_secretaria_exception('Unknown course');
         }
 
         $enrolments = array();
-        if ($records = $this->moodle->get_role_assignments_by_context($contextid, $mnethostid)) {
+        if ($records = $this->moodle->get_role_assignments_by_course($courseid, $mnethostid)) {
             foreach ($records as $record) {
                 $enrolments[] = array('user' => $record->user, 'role' => $record->role);
             }
@@ -136,7 +136,7 @@ class local_secretaria_operations {
         $this->moodle->start_transaction();
 
         foreach ($enrolments as $enrolment) {
-            if (!$contextid = $this->moodle->get_context_id($enrolment['course'])) {
+            if (!$courseid = $this->moodle->get_course_id($enrolment['course'])) {
                 $this->moodle->rollback_transaction();
                 throw new local_secretaria_exception('Unknown course');
             }
@@ -148,8 +148,8 @@ class local_secretaria_operations {
                 $this->moodle->rollback_transaction();
                 throw new local_secretaria_exception('Unknown role');
             }
-            if (!$this->moodle->role_assignment_exists($contextid, $userid, $roleid)) {
-                $this->moodle->insert_role_assignment($contextid, $userid, $roleid);
+            if (!$this->moodle->role_assignment_exists($courseid, $userid, $roleid)) {
+                $this->moodle->insert_role_assignment($courseid, $userid, $roleid);
             }
         }
 
@@ -162,7 +162,7 @@ class local_secretaria_operations {
         $this->moodle->start_transaction();
 
         foreach ($enrolments as $enrolment) {
-            if (!$contextid = $this->moodle->get_context_id($enrolment['course'])) {
+            if (!$courseid = $this->moodle->get_course_id($enrolment['course'])) {
                 $this->moodle->rollback_transaction();
                 throw new local_secretaria_exception('Unknown course');
             }
@@ -174,7 +174,7 @@ class local_secretaria_operations {
                 $this->moodle->rollback_transaction();
                 throw new local_secretaria_exception('Unknown role');
             }
-            $this->moodle->delete_role_assignment($contextid, $userid, $roleid);
+            $this->moodle->delete_role_assignment($courseid, $userid, $roleid);
         }
 
         $this->moodle->commit_transaction();

@@ -19,7 +19,6 @@ abstract class local_secretaria_test_base extends UnitTestCase {
 
     function setUp() {
         $this->moodle = Mockery::mock('local_secretaria_moodle');
-        $this->moodle->shouldReceive('get_context_id')->andReturn(false)->byDefault();
         $this->moodle->shouldReceive('get_course_id')->andReturn(false)->byDefault();
         $this->moodle->shouldReceive('get_group_id')->andReturn(false)->byDefault();
         $this->moodle->shouldReceive('get_role_id')->andReturn(false)->byDefault();
@@ -30,11 +29,6 @@ abstract class local_secretaria_test_base extends UnitTestCase {
 
     function tearDown() {
         Mockery::close();
-    }
-
-    protected function having_context_id($shortname, $courseid) {
-        $this->moodle->shouldReceive('get_context_id')
-            ->with($shortname)->andReturn($courseid);
     }
 
     protected function having_course_id($shortname, $courseid) {
@@ -311,13 +305,13 @@ class local_secretaria_test_get_course_enrolments extends local_secretaria_test_
 
     function test() {
         $records = array(
-            (object) array('id' => 201, 'user' => 'user1', 'role' => 'role1'),
+            (object) array('id' => 301, 'user' => 'user1', 'role' => 'role1'),
             (object) array('id' => 302, 'user' => 'user2', 'role' => 'role2'),
         );
 
-        $this->having_context_id('course1', 101);
+        $this->having_course_id('course1', 101);
         $this->having_mnet_host_id(201);
-        $this->moodle->shouldReceive('get_role_assignments_by_context')
+        $this->moodle->shouldReceive('get_role_assignments_by_course')
             ->with(101, 201)->andReturn($records);
 
         $result = $this->operations->get_course_enrolments('course1');
@@ -329,9 +323,9 @@ class local_secretaria_test_get_course_enrolments extends local_secretaria_test_
     }
 
     function test_no_enrolments() {
-        $this->having_context_id('course1', 101);
+        $this->having_course_id('course1', 101);
         $this->having_mnet_host_id(201);
-        $this->moodle->shouldReceive('get_role_assignments_by_context')
+        $this->moodle->shouldReceive('get_role_assignments_by_course')
             ->with(101, 201)->andReturn(array());
 
         $result = $this->operations->get_course_enrolments('course1');
@@ -392,7 +386,7 @@ class local_secretaria_test_enrol_users extends local_secretaria_test_base {
         $this->having_mnet_host_id(101);
         $this->moodle->shouldReceive('start_transaction')->once()->ordered();
         for ($i = 1; $i <= 3; $i++) {
-            $this->having_context_id('course' . $i, 200 + $i);
+            $this->having_course_id('course' . $i, 200 + $i);
             $this->having_user_id(101, 'user' . $i, 300 + $i);
             $this->having_role_id('role' . $i, 400 + $i);
             $this->moodle->shouldReceive('role_assignment_exists')
@@ -411,7 +405,7 @@ class local_secretaria_test_enrol_users extends local_secretaria_test_base {
 
     function test_duplicate_enrolment() {
         $this->having_mnet_host_id(101);
-        $this->having_context_id('course1', 201);
+        $this->having_course_id('course1', 201);
         $this->having_user_id(101, 'user1', 301);
         $this->having_role_id('role1', 401);
         $this->moodle->shouldReceive('role_assignment_exists')
@@ -439,7 +433,7 @@ class local_secretaria_test_enrol_users extends local_secretaria_test_base {
 
     function test_unknown_user() {
         $this->having_mnet_host_id(101);
-        $this->having_context_id('course1', 201);
+        $this->having_course_id('course1', 201);
         $this->having_role_id('role1', 401);
         $this->moodle->shouldReceive('start_transaction')->once()->ordered();
         $this->moodle->shouldReceive('rollback_transaction')->once()->ordered();
@@ -452,7 +446,7 @@ class local_secretaria_test_enrol_users extends local_secretaria_test_base {
 
     function test_unknown_role() {
         $this->having_mnet_host_id(101);
-        $this->having_context_id('course1', 201);
+        $this->having_course_id('course1', 201);
         $this->having_user_id(101, 'user1', 301);
         $this->moodle->shouldReceive('start_transaction')->once()->ordered();
         $this->moodle->shouldReceive('rollback_transaction')->once()->ordered();
@@ -471,7 +465,7 @@ class local_secretaria_test_unenrol_users extends local_secretaria_test_base {
         $this->having_mnet_host_id(101);
         $this->moodle->shouldReceive('start_transaction')->once()->ordered();
         for ($i = 1; $i <= 3; $i++) {
-            $this->having_context_id('course' . $i, 200 + $i);
+            $this->having_course_id('course' . $i, 200 + $i);
             $this->having_user_id(101, 'user' . $i, 300 + $i);
             $this->having_role_id('role' . $i, 400 + $i);
             $this->moodle->shouldReceive('role_assignment_exists')
@@ -503,7 +497,7 @@ class local_secretaria_test_unenrol_users extends local_secretaria_test_base {
 
     function test_unknown_user() {
         $this->having_mnet_host_id(101);
-        $this->having_context_id('course1', 201);
+        $this->having_course_id('course1', 201);
         $this->having_role_id('role1', 401);
         $this->moodle->shouldReceive('start_transaction')->once()->ordered();
         $this->moodle->shouldReceive('rollback_transaction')->once()->ordered();
@@ -516,7 +510,7 @@ class local_secretaria_test_unenrol_users extends local_secretaria_test_base {
 
     function test_unknown_role() {
         $this->having_mnet_host_id(101);
-        $this->having_context_id('course1', 201);
+        $this->having_course_id('course1', 201);
         $this->having_user_id(101, 'user1', 301);
         $this->moodle->shouldReceive('start_transaction')->once()->ordered();
         $this->moodle->shouldReceive('rollback_transaction')->once()->ordered();

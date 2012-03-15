@@ -185,19 +185,10 @@ class local_secretaria_moodle {
         delete_user($record);
     }
 
-    function delete_role_assignment($contextid, $userid, $roleid) {
-        delete_records('role_assignments', 'contextid', $contextid,
+    function delete_role_assignment($courseid, $userid, $roleid) {
+        $context = get_context_instance(CONTEXT_COURSE, $courseid);
+        delete_records('role_assignments', 'contextid', $context->id,
                        'userid', $userid, 'roleid', $roleid);
-    }
-
-    function get_context_id($course) {
-        if (!$courseid = get_field('course', 'id', 'shortname', addslashes($course))) {
-            return false;
-        }
-        if (!$context = get_context_instance(CONTEXT_COURSE, $courseid)) {
-            return false;
-        }
-        return $context->id;
     }
 
     function get_course_id($shortname) {
@@ -222,14 +213,15 @@ class local_secretaria_moodle {
         return get_records('groups', 'courseid', $courseid);
     }
 
-    function get_role_assignments_by_context($contextid, $mnethostid) {
+    function get_role_assignments_by_course($courseid, $mnethostid) {
         global $CFG;
+        $context = get_context_instance(CONTEXT_COURSE, $courseid);
         $sql = sprintf("SELECT ra.id, u.username AS user, r.shortname AS role " .
                        "FROM {$CFG->prefix}role_assignments ra " .
                        "JOIN {$CFG->prefix}user u ON u.id = ra.userid " .
                        "JOIN {$CFG->prefix}role r ON r.id = ra.roleid " .
                        "WHERE ra.contextid = %d AND u.mnethostid = %d AND u.deleted = 0",
-                       $contextid, $mnethostid);
+                       $context->id, $mnethostid);
         return get_records_sql($sql);
     }
 
@@ -305,9 +297,10 @@ class local_secretaria_moodle {
         insert_record('groups', addslashes_recursive($record));
     }
 
-    function insert_role_assignment($contextid, $userid, $roleid) {
+    function insert_role_assignment($courseid, $userid, $roleid) {
+        $context = get_context_instance(CONTEXT_COURSE, $courseid);
         $record = (object) array(
-            'contextid' => $contextid,
+            'contextid' => $context->id,
             'userid' => $userid,
             'roleid' => $roleid,
             'enrol' => 'manual',
@@ -325,8 +318,9 @@ class local_secretaria_moodle {
         return (int) $CFG->mnet_localhost_id;
     }
 
-    function role_assignment_exists($contextid, $userid, $roleid) {
-        return record_exists('role_assignments', 'contextid', $contextid,
+    function role_assignment_exists($courseid, $userid, $roleid) {
+        $context = get_context_instance(CONTEXT_COURSE, $courseid);
+        return record_exists('role_assignments', 'contextid', $context->id,
                              'userid', $userid, 'roleid', $roleid);
     }
 

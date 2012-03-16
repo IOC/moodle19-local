@@ -40,10 +40,18 @@ class local_secretaria_service {
 
     static function valid_param($param, $value) {
         switch ($param['type']) {
-        case 'string':
-            if (!is_string($value)) return false;
-            if (empty($value) and empty($param['optional'])) return false;
-            return true;
+        case 'raw':
+            return is_string($value);
+        case 'alphanumext':
+            return is_string($value) and preg_match('/^[a-zA-Z0-9_-]*$/', $value);
+        case 'notags':
+            return is_string($value) and $value === clean_param($value, PARAM_NOTAGS);
+        case 'text':
+            return is_string($value) and $value === clean_param($value, PARAM_TEXT);
+        case 'username':
+            return is_string($value) and preg_match('/^[a-z0-9\.-]*$/', $value);
+        case 'email':
+            return is_string($value) and validate_email($value);
         case 'list':
             if (!is_array($value)) return false;
             for ($i = 0; $i < count($value); $i++) {
@@ -51,15 +59,17 @@ class local_secretaria_service {
                 if (!self::valid_param($param['of'], $value[$i])) return false;
             }
             return true;
-        case 'dictionary':
+        case 'dict':
+            $required = isset($param['required']) ? $param['required'] : array();
+            $optional = isset($param['optional']) ? $param['optional'] : array();
+            $items = array_merge($required, $optional);
             if (!is_array($value)) return false;
-            foreach ($value as $k => $v) {
-                if (!is_string($k) or !is_string($v)) return false;
+            foreach ($required as $k => $v) {
+                if (!isset($value[$k])) return false;
             }
-            if (isset($param['required'])) {
-                foreach ($param['required'] as $k) {
-                    if (empty($value[$k])) return false;
-                }
+            foreach ($value as $k => $v) {
+                if (!isset($items[$k])) return false;
+                if (!self::valid_param($items[$k], $v)) return false;
             }
             return true;
         }
@@ -68,49 +78,75 @@ class local_secretaria_service {
     /* Users */
 
     private $get_user_parameters = array(
-        'username' => array('type' => 'string'),
+        'username' => array('type' => 'username'),
     );
 
     private $create_user_parameters = array(
         'properties' => array(
-            'type' => 'dictionary',
-            'required' => array('username', 'password',
-                                'firstname', 'lastname', 'email'),
+            'type' => 'dict',
+            'required' => array(
+                'username' => array('type' => 'username'),
+                'password' => array('type' => 'raw'),
+                'firstname' => array('type' => 'notags'),
+                'lastname' => array('type' => 'notags'),
+                'email' => array('type' => 'email'),
+            ),
         ),
     );
 
     private $update_user_parameters = array(
-        'username' => array('type' => 'string'),
-        'properties' => array('type' => 'dictionary'),
+        'username' => array('type' => 'username'),
+        'properties' => array(
+            'type' => 'dict',
+            'optional' => array(
+                'username' => array('type' => 'username'),
+                'password' => array('type' => 'raw'),
+                'firstname' => array('type' => 'notags'),
+                'lastname' => array('type' => 'notags'),
+                'email' => array('type' => 'email'),
+            ),
+        ),
     );
 
     private $delete_user_parameters = array(
-        'username' => array('type' => 'string'),
+        'username' => array('type' => 'username'),
     );
 
     /* Enrolments */
 
     private $get_course_enrolments_parameters = array(
-        'course' => array('type' => 'string'),
+        'course' => array('type' => 'text'),
     );
 
     private $get_user_enrolments_parameters = array(
-        'username' => array('type' => 'string'),
+        'username' => array('type' => 'username'),
     );
 
     private $enrol_users_parameters = array(
         'enrolments' => array(
             'type' => 'list',
-            'of' => array('type' => 'dictionary',
-                          'required' => array('course', 'user', 'role')),
+            'of' => array(
+                'type' => 'dict',
+                'required' => array(
+                    'course' => array('type' => 'text'),
+                    'user' => array('type' => 'username'),
+                    'role' => array('type' => 'alphanumext'),
+                ),
+            ),
         ),
     );
 
     private $unenrol_users_parameters = array(
         'enrolments' => array(
             'type' => 'list',
-            'of' => array('type' => 'dictionary',
-                          'required' => array('course', 'user', 'role')),
+            'of' => array(
+                'type' => 'dict',
+                'required' => array(
+                    'course' => array('type' => 'text'),
+                    'user' => array('type' => 'username'),
+                    'role' => array('type' => 'alphanumext'),
+                ),
+            ),
         ),
     );
 
@@ -118,47 +154,47 @@ class local_secretaria_service {
     /* Groups */
 
     private $get_groups_parameters = array(
-        'course' => array('type' => 'string'),
+        'course' => array('type' => 'text'),
     );
 
     private $create_group_parameters = array(
-        'course' => array('type' => 'string'),
-        'name' => array('type' => 'string'),
-        'description' => array('type' => 'string', 'optional' => 'true'),
+        'course' => array('type' => 'text'),
+        'name' => array('type' => 'text'),
+        'description' => array('type' => 'raw'),
     );
 
     private $delete_group_parameters = array(
-        'course' => array('type' => 'string'),
-        'name' => array('type' => 'string'),
+        'course' => array('type' => 'text'),
+        'name' => array('type' => 'text'),
     );
 
     private $get_group_members_parameters = array(
-        'course' => array('type' => 'string'),
-        'name' => array('type' => 'string'),
+        'course' => array('type' => 'text'),
+        'name' => array('type' => 'text'),
     );
 
     private $add_group_members_parameters = array(
-        'course' => array('type' => 'string'),
-        'name' => array('type' => 'string'),
-        'users' => array('type' => 'list', 'of' => array('type' => 'string')),
+        'course' => array('type' => 'text'),
+        'name' => array('type' => 'text'),
+        'users' => array('type' => 'list', 'of' => array('type' => 'username')),
     );
 
     private $remove_group_members_parameters = array(
-        'course' => array('type' => 'string'),
-        'name' => array('type' => 'string'),
-        'users' => array('type' => 'list', 'of' => array('type' => 'string')),
+        'course' => array('type' => 'text'),
+        'name' => array('type' => 'text'),
+        'users' => array('type' => 'list', 'of' => array('type' => 'username')),
     );
 
     /* Grades */
 
     private $get_course_grades_parameters = array(
-        'course' => array('type' => 'string'),
-        'users' => array('type' => 'list', 'of' => array('type' => 'string')),
+        'course' => array('type' => 'text'),
+        'users' => array('type' => 'list', 'of' => array('type' => 'username')),
     );
 
     private $get_user_grades_parameters = array(
-        'user' => array('type' => 'string'),
-        'courses' => array('type' => 'list', 'of' => array('type' => 'string')),
+        'user' => array('type' => 'username'),
+        'courses' => array('type' => 'list', 'of' => array('type' => 'text')),
     );
 }
 

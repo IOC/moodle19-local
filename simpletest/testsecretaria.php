@@ -68,23 +68,50 @@ abstract class local_secretaria_test_base extends UnitTestCase {
 
 class local_secretaria_test_valid_param extends UnitTestCase {
 
-    function test_string() {
-        $param = array('type' => 'string');
+    function test_raw() {
+        $param = array('type' => 'raw');
         $this->assertTrue(local_secretaria_service::valid_param($param, 'abc'));
-        $this->assertFalse(local_secretaria_service::valid_param($param, ''));
-        $this->assertFalse(local_secretaria_service::valid_param($param, true));
-        $this->assertFalse(local_secretaria_service::valid_param($param, 123));
+        $this->assertTrue(local_secretaria_service::valid_param($param, ''));
         $this->assertFalse(local_secretaria_service::valid_param($param, array()));
     }
 
-    function test_string_optional() {
-        $param = array('type' => 'string', 'optional' => true);
+    function test_notags() {
+        $param = array('type' => 'notags');
         $this->assertTrue(local_secretaria_service::valid_param($param, 'abc'));
-        $this->assertTrue(local_secretaria_service::valid_param($param, ''));
+        $this->assertFalse(local_secretaria_service::valid_param($param, '<lang>abc</lang>'));
+        $this->assertFalse(local_secretaria_service::valid_param($param, array()));
+    }
+
+    function test_text() {
+        $param = array('type' => 'text');
+        $this->assertTrue(local_secretaria_service::valid_param($param, '<lang>abc</lang>'));
+        $this->assertFalse(local_secretaria_service::valid_param($param, '<div>abc</div>'));
+        $this->assertFalse(local_secretaria_service::valid_param($param, array()));
+    }
+
+    function test_username() {
+        $param = array('type' => 'username');
+        $this->assertTrue(local_secretaria_service::valid_param($param, 'username'));
+        $this->assertFalse(local_secretaria_service::valid_param($param, 'invalid username!'));
+        $this->assertFalse(local_secretaria_service::valid_param($param, array()));
+    }
+
+    function test_alphanumext() {
+        $param = array('type' => 'alphanumext');
+        $this->assertTrue(local_secretaria_service::valid_param($param, 'abc123-_'));
+        $this->assertFalse(local_secretaria_service::valid_param($param, 'invalid string'));
+        $this->assertFalse(local_secretaria_service::valid_param($param, array()));
+    }
+
+    function test_email() {
+        $param = array('type' => 'email');
+        $this->assertTrue(local_secretaria_service::valid_param($param, 'user@example.org'));
+        $this->assertFalse(local_secretaria_service::valid_param($param, 'invalid email'));
+        $this->assertFalse(local_secretaria_service::valid_param($param, array()));
     }
 
     function test_list() {
-        $param = array('type' => 'list', 'of' => array('type' => 'string'));
+        $param = array('type' => 'list', 'of' => array('type' => 'raw'));
         $this->assertTrue(local_secretaria_service::valid_param($param, array()));
         $this->assertTrue(local_secretaria_service::valid_param($param, array('abc', 'def')));
         $this->assertFalse(local_secretaria_service::valid_param($param, array('abc', 123)));
@@ -92,21 +119,19 @@ class local_secretaria_test_valid_param extends UnitTestCase {
         $this->assertFalse(local_secretaria_service::valid_param($param, 123));
     }
 
-    function test_dictionary() {
-        $param = array('type' => 'dictionary');
-        $this->assertTrue(local_secretaria_service::valid_param($param, array()));
+    function test_dict() {
+        $param = array(
+            'type' => 'dict',
+            'required' => array('a' => array('type' => 'raw')),
+            'optional' => array('b' => array('type' => 'raw')),
+        );
+        $this->assertTrue(local_secretaria_service::valid_param($param, array('a' => 'A')));
         $this->assertTrue(local_secretaria_service::valid_param($param, array('a' => 'A', 'b' => 'B')));
-        $this->assertFalse(local_secretaria_service::valid_param($param, array('abc', 'def')));
-        $this->assertFalse(local_secretaria_service::valid_param($param, array('a' => 1, 'b' => 2)));
+        $this->assertFalse(local_secretaria_service::valid_param($param, array('a' => 123)));
+        $this->assertFalse(local_secretaria_service::valid_param($param, array()));
+        $this->assertFalse(local_secretaria_service::valid_param($param, array('a' => 'A', 'b' => 'B', 'c' => 'C')));
         $this->assertFalse(local_secretaria_service::valid_param($param, true));
         $this->assertFalse(local_secretaria_service::valid_param($param, 123));
-    }
-
-    function test_dictionary_required() {
-        $param = array('type' => 'dictionary', 'required' => array('a', 'b'));
-        $this->assertTrue(local_secretaria_service::valid_param($param, array('a' => 'A', 'b' => 'B')));
-        $this->assertFalse(local_secretaria_service::valid_param($param, array()));
-        $this->assertFalse(local_secretaria_service::valid_param($param, array('a' => 'A')));
     }
 }
 

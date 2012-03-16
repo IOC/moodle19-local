@@ -77,7 +77,9 @@ class local_secretaria_operations {
         }
 
         $this->moodle->start_transaction();
-        $this->moodle->update_record('user', $record);
+        if (count((array) $record) > 1) {
+            $this->moodle->update_record('user', $record);
+        }
         if (!empty($properties['password'])) {
             $this->moodle->update_user_password($record->id, $properties['password']);
         }

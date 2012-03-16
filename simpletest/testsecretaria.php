@@ -242,7 +242,7 @@ class local_secretaria_test_update_user extends local_secretaria_test_base {
         $this->having_mnet_host_id(101);
         $this->expectException(new local_secretaria_exception('Unknown user'));
 
-        $this->operations->update_user('user1', array());
+        $this->operations->update_user('user1', array('username' => 'user1'));
     }
 
     function test_duplicate_username() {
@@ -254,18 +254,26 @@ class local_secretaria_test_update_user extends local_secretaria_test_base {
         $this->operations->update_user('user1', array('username' => 'user2'));
     }
 
-    function test_username_not_changed() {
-        $record = (object) array('id' => 201);
+    function test_same_username() {
         $this->having_mnet_host_id(101);
         $this->having_user_id(101, 'user1', 201);
         $this->moodle->shouldReceive('start_transaction')->once()->ordered();
-        $this->moodle->shouldReceive('update_record')
-            ->with('user', Mockery::mustBe($record))
-            ->once()->ordered();
         $this->moodle->shouldReceive('commit_transaction')->once()->ordered();
 
         $this->operations->update_user('user1', array('username' => 'user1'));
     }
+
+    function test_password_only() {
+        $this->having_mnet_host_id(101);
+        $this->having_user_id(101, 'user1', 201);
+        $this->moodle->shouldReceive('start_transaction')->once()->ordered();
+        $this->moodle->shouldReceive('update_user_password')
+            ->with(201, 'abc123')->once()->ordered();
+        $this->moodle->shouldReceive('commit_transaction')->once()->ordered();
+
+        $this->operations->update_user('user1', array('password' => 'abc123'));
+    }
+
 }
 
 

@@ -224,11 +224,39 @@ class local_secretaria_test_create_user extends local_secretaria_test_base {
         $this->operations->create_user($this->properties);
     }
 
+    function test_blank_username() {
+        $this->properties['username'] = '';
+        $this->having_mnet_localhost_id(101);
+        $this->having_mnet_host_id(101);
+        $this->expectException(new local_secretaria_exception('Invalid parameters'));
+
+        $this->operations->create_user($this->properties);
+    }
+
+    function test_blank_firstname() {
+        $this->properties['firstname'] = '';
+        $this->having_mnet_localhost_id(101);
+        $this->having_mnet_host_id(101);
+        $this->expectException(new local_secretaria_exception('Invalid parameters'));
+
+        $this->operations->create_user($this->properties);
+    }
+
+    function test_blank_lastname() {
+        $this->properties['lastname'] = '';
+        $this->having_mnet_localhost_id(101);
+        $this->having_mnet_host_id(101);
+        $this->expectException(new local_secretaria_exception('Invalid parameters'));
+
+        $this->operations->create_user($this->properties);
+    }
+
     function test_duplicate_username() {
         $this->having_mnet_localhost_id(101);
         $this->having_mnet_host_id(101);
         $this->having_user_id(101, 'user1', 201);
         $this->expectException(new local_secretaria_exception('Duplicate username'));
+
         $this->operations->create_user($this->properties);
     }
 }
@@ -298,7 +326,6 @@ class local_secretaria_test_update_user extends local_secretaria_test_base {
 
         $this->operations->update_user('user1', array('password' => 'abc123'));
     }
-
 }
 
 

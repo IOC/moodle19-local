@@ -31,6 +31,12 @@ class local_secretaria_operations {
 
 
     function create_user($properties) {
+        if (empty($properties['username']) or
+            empty($properties['firstname']) or
+            empty($properties['lastname'])) {
+            throw new local_secretaria_exception('Invalid parameters');
+        }
+
         $mnethostid = $this->moodle->mnet_host_id();
         $mnetlocalhostid = $this->moodle->mnet_localhost_id();
         $auth = ($mnethostid == $mnetlocalhostid ? 'manual' : 'mnet');

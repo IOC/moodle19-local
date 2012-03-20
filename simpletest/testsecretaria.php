@@ -204,6 +204,8 @@ class local_secretaria_test_create_user extends local_secretaria_test_base {
         $this->having_mnet_localhost_id(101);
         $this->having_mnet_host_id(101);
         $this->moodle->shouldReceive('start_transaction')->once()->ordered();
+        $this->moodle->shouldReceive('check_password')
+            ->with('abc123')->andReturn(true);
         $this->moodle->shouldReceive('create_user')
             ->with('manual', 101, 'user1', 'abc123', 'First', 'Last', 'user1@example.org')
             ->once()->ordered();
@@ -259,6 +261,16 @@ class local_secretaria_test_create_user extends local_secretaria_test_base {
 
         $this->operations->create_user($this->properties);
     }
+
+    function test_invalid_password() {
+        $this->having_mnet_localhost_id(101);
+        $this->having_mnet_host_id(101);
+        $this->moodle->shouldReceive('check_password')
+            ->with('abc123')->andReturn(false);
+        $this->expectException(new local_secretaria_exception('Invalid password'));
+
+        $this->operations->create_user($this->properties);
+    }
 }
 
 
@@ -276,10 +288,12 @@ class local_secretaria_test_update_user extends local_secretaria_test_base {
         $this->having_mnet_localhost_id(101);
         $this->having_user_id(101, 'user1', 201);
         $this->having_user_id(101, 'user2', false);
+        $this->moodle->shouldReceive('check_password')
+            ->with('abc123')->andReturn(true);
         $this->moodle->shouldReceive('start_transaction')->once()->ordered();
         $this->moodle->shouldReceive('update_record')
             ->with('user', Mockery::mustBe($record))->once()->ordered();
-        $this->moodle->shouldReceive('update_user_password')
+        $this->moodle->shouldReceive('update_password')
             ->with(201, 'abc123')->once()->ordered();
         $this->moodle->shouldReceive('commit_transaction')->once()->ordered();
 
@@ -298,6 +312,15 @@ class local_secretaria_test_update_user extends local_secretaria_test_base {
         $this->expectException(new local_secretaria_exception('Unknown user'));
 
         $this->operations->update_user('user1', array('username' => 'user1'));
+    }
+
+    function test_blank_username() {
+        $this->having_mnet_host_id(101);
+        $this->having_mnet_localhost_id(101);
+        $this->having_user_id(101, 'user1', 201);
+        $this->expectException(new local_secretaria_exception('Invalid parameters'));
+
+        $this->operations->update_user('user1', array('username' => ''));
     }
 
     function test_duplicate_username() {
@@ -324,10 +347,23 @@ class local_secretaria_test_update_user extends local_secretaria_test_base {
         $this->having_mnet_host_id(101);
         $this->having_mnet_localhost_id(101);
         $this->having_user_id(101, 'user1', 201);
+        $this->moodle->shouldReceive('check_password')
+            ->with('abc123')->andReturn(true);
         $this->moodle->shouldReceive('start_transaction')->once()->ordered();
-        $this->moodle->shouldReceive('update_user_password')
+        $this->moodle->shouldReceive('update_password')
             ->with(201, 'abc123')->once()->ordered();
         $this->moodle->shouldReceive('commit_transaction')->once()->ordered();
+
+        $this->operations->update_user('user1', array('password' => 'abc123'));
+    }
+
+    function test_invalid_password() {
+        $this->having_mnet_host_id(101);
+        $this->having_mnet_localhost_id(101);
+        $this->having_user_id(101, 'user1', 201);
+        $this->moodle->shouldReceive('check_password')
+            ->with('abc123')->andReturn(false);
+        $this->expectException(new local_secretaria_exception('Invalid password'));
 
         $this->operations->update_user('user1', array('password' => 'abc123'));
     }
@@ -340,6 +376,37 @@ class local_secretaria_test_update_user extends local_secretaria_test_base {
         $this->moodle->shouldReceive('commit_transaction')->once()->ordered();
 
         $this->operations->update_user('user1', array('password' => 'abc123'));
+    }
+
+    function test_blank_firstname() {
+        $this->having_mnet_host_id(101);
+        $this->having_mnet_localhost_id(101);
+        $this->having_user_id(101, 'user1', 201);
+        $this->expectException(new local_secretaria_exception('Invalid parameters'));
+
+        $this->operations->update_user('user1', array('firstname' => ''));
+    }
+
+    function test_blank_lastname() {
+        $this->having_mnet_host_id(101);
+        $this->having_mnet_localhost_id(101);
+        $this->having_user_id(101, 'user1', 201);
+        $this->expectException(new local_secretaria_exception('Invalid parameters'));
+
+        $this->operations->update_user('user1', array('lastname' => ''));
+    }
+
+    function test_blank_email() {
+        $record = (object) array('id' => 201, 'email' => '');
+        $this->having_mnet_host_id(101);
+        $this->having_mnet_localhost_id(101);
+        $this->having_user_id(101, 'user1', 201);
+        $this->moodle->shouldReceive('start_transaction')->once()->ordered();
+        $this->moodle->shouldReceive('update_record')
+            ->with('user', Mockery::mustBe($record))->once()->ordered();
+        $this->moodle->shouldReceive('commit_transaction')->once()->ordered();
+
+        $this->operations->update_user('user1', array('email' => ''));
     }
 }
 
@@ -650,6 +717,13 @@ class local_secretaria_test_create_group extends local_secretaria_test_base {
     function test_unknown_course() {
         $this->expectException(new local_secretaria_exception('Unknown course'));
         $this->operations->create_group('course1', 'group1', 'Group 1');
+    }
+
+    function test_blank_name() {
+        $this->having_course_id('course1', 101);
+        $this->expectException(new local_secretaria_exception('Invalid parameters'));
+
+        $this->operations->create_group('course1', '', 'Group 1');
     }
 
     function test_duplicate_group() {

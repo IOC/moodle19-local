@@ -202,6 +202,10 @@ class local_secretaria_moodle {
 
     private $transaction = false;
 
+    function check_password($password) {
+        return check_password_policy($password);
+    }
+
     function commit_transaction() {
         commit_sql();
         $this->transaction = false;
@@ -386,7 +390,7 @@ class local_secretaria_moodle {
         $this->transaction = true;
     }
 
-    function update_user_password($userid, $password) {
+    function update_password($userid, $password) {
         $record = get_record('user', 'id', $userid);
         update_internal_user_password($record, $password);
     }

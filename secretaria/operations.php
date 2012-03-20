@@ -40,16 +40,19 @@ class local_secretaria_operations {
         $mnethostid = $this->moodle->mnet_host_id();
         $mnetlocalhostid = $this->moodle->mnet_localhost_id();
 
+        if ($this->moodle->get_user_id($mnethostid, $properties['username'])) {
+            throw new local_secretaria_exception('Duplicate username');
+        }
+
         if ($mnethostid == $mnetlocalhostid) {
             $auth = 'manual';
             $password = $properties['password'];
+            if (!$this->moodle->check_password($password)) {
+                throw new local_secretaria_exception('Invalid password');
+            }
         } else {
             $auth = 'mnet';
             $password = null;
-        }
-
-        if ($this->moodle->get_user_id($mnethostid, $properties['username'])) {
-            throw new local_secretaria_exception('Duplicate username');
         }
 
         $this->moodle->start_transaction();
@@ -74,19 +77,35 @@ class local_secretaria_operations {
             throw new local_secretaria_exception('Unknown user');
         }
 
-        if (!empty($properties['username']) and $properties['username'] != $username) {
-            if ($this->moodle->get_user_id($mnethostid, $properties['username'])) {
-                throw new local_secretaria_exception('Duplicate username');
+        if (isset($properties['username'])) {
+            if (empty($properties['username'])) {
+                throw new local_secretaria_exception('Invalid parameters');
             }
-            $record->username = $properties['username'];
+            if ($properties['username'] != $username) {
+                if ($this->moodle->get_user_id($mnethostid, $properties['username'])) {
+                    throw new local_secretaria_exception('Duplicate username');
+                }
+                $record->username = $properties['username'];
+            }
         }
-        if (!empty($properties['firstname'])) {
+        if (isset($properties['password']) and $mnethostid == $mnetlocalhostid) {
+            if (!$this->moodle->check_password($properties['password'])) {
+                throw new local_secretaria_exception('Invalid password');
+            }
+        }
+        if (isset($properties['firstname'])) {
+            if (empty($properties['firstname'])) {
+                throw new local_secretaria_exception('Invalid parameters');
+            }
             $record->firstname = $properties['firstname'];
         }
-        if (!empty($properties['lastname'])) {
+        if (isset($properties['lastname'])) {
+            if (empty($properties['lastname'])) {
+                throw new local_secretaria_exception('Invalid parameters');
+            }
             $record->lastname = $properties['lastname'];
         }
-        if (!empty($properties['email'])) {
+        if (isset($properties['email'])) {
             $record->email = $properties['email'];
         }
 
@@ -94,8 +113,8 @@ class local_secretaria_operations {
         if (count((array) $record) > 1) {
             $this->moodle->update_record('user', $record);
         }
-        if (!empty($properties['password']) and $mnethostid == $mnetlocalhostid) {
-            $this->moodle->update_user_password($record->id, $properties['password']);
+        if (isset($properties['password']) and $mnethostid == $mnetlocalhostid) {
+            $this->moodle->update_password($record->id, $properties['password']);
         }
         $this->moodle->commit_transaction();
     }
@@ -212,6 +231,9 @@ class local_secretaria_operations {
     function create_group($course, $name, $description) {
         if (!$courseid = $this->moodle->get_course_id($course)) {
             throw new local_secretaria_exception('Unknown course');
+        }
+        if (empty($name)) {
+            throw new local_secretaria_exception('Invalid parameters');
         }
         if ($this->moodle->get_group_id($courseid, $name)) {
             throw new local_secretaria_exception('Duplicate group');

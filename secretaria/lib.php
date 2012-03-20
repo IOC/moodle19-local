@@ -215,7 +215,11 @@ class local_secretaria_moodle {
         $record->auth = $auth;
         $record->mnethostid = $mnethostid;
         $record->username = $username;
-        $record->password = hash_internal_user_password($password);
+        if ($password) {
+            $record->password = hash_internal_user_password($password);
+        } else {
+            $record->password = 'not cached';
+        }
         $record->firstname = $firstname;
         $record->lastname = $lastname;
         $record->email = $email;

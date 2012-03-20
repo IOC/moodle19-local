@@ -39,7 +39,14 @@ class local_secretaria_operations {
 
         $mnethostid = $this->moodle->mnet_host_id();
         $mnetlocalhostid = $this->moodle->mnet_localhost_id();
-        $auth = ($mnethostid == $mnetlocalhostid ? 'manual' : 'mnet');
+
+        if ($mnethostid == $mnetlocalhostid) {
+            $auth = 'manual';
+            $password = $properties['password'];
+        } else {
+            $auth = 'mnet';
+            $password = null;
+        }
 
         if ($this->moodle->get_user_id($mnethostid, $properties['username'])) {
             throw new local_secretaria_exception('Duplicate username');
@@ -50,7 +57,7 @@ class local_secretaria_operations {
             $auth,
             $mnethostid,
             $properties['username'],
-            $properties['password'],
+            $password,
             $properties['firstname'],
             $properties['lastname'],
             $properties['email']
@@ -61,6 +68,7 @@ class local_secretaria_operations {
     function update_user($username, $properties) {
         $record = new stdClass;
         $mnethostid = $this->moodle->mnet_host_id();
+        $mnetlocalhostid = $this->moodle->mnet_localhost_id();
 
         if (!$record->id = $this->moodle->get_user_id($mnethostid, $username)) {
             throw new local_secretaria_exception('Unknown user');
@@ -86,7 +94,7 @@ class local_secretaria_operations {
         if (count((array) $record) > 1) {
             $this->moodle->update_record('user', $record);
         }
-        if (!empty($properties['password'])) {
+        if (!empty($properties['password']) and $mnethostid == $mnetlocalhostid) {
             $this->moodle->update_user_password($record->id, $properties['password']);
         }
         $this->moodle->commit_transaction();

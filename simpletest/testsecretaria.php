@@ -958,17 +958,26 @@ class local_secretaria_test_get_course_grades extends local_secretaria_test_base
                   'module' => null,
                   'idnumber' => 'id101',
                   'name' => null,
-                  'grades' => array('user1' => '5.1', 'user2' => '5.2')),
+                  'grades' => array(
+                      array('user' => 'user1', 'grade' => '5.1'),
+                      array('user' => 'user2', 'grade' => '5.2'),
+                  )),
             array('type' => 'category',
                   'module' => null,
                   'idnumber' => 'id301',
                   'name' => 'Category 1',
-                  'grades' => array('user1' => '6.1', 'user2' => '6.2')),
+                  'grades' => array(
+                      array('user' => 'user1', 'grade' => '6.1'),
+                      array('user' => 'user2', 'grade' => '6.2'),
+                  )),
             array('type' => 'module',
                   'module' => 'assignment',
                   'idnumber' => 'id401',
                   'name' => 'Assignment 1',
-                  'grades' => array('user1' => '7.1', 'user2' => '7.2')),
+                  'grades' => array(
+                      array('user' => 'user1', 'grade' => '7.1'),
+                      array('user' => 'user2', 'grade' => '7.2'),
+                  )),
         ));
     }
 
@@ -1020,8 +1029,8 @@ class local_secretaria_test_get_user_grades extends local_secretaria_test_base {
             'user1', array('course1', 'course2'));
 
         $this->assertEqual($result, array(
-            'course1' => '5.1',
-            'course2' => '6.2',
+            array('course' => 'course1', 'grade' => '5.1'),
+            array('course' => 'course2', 'grade' => '6.2'),
         ));
     }
 
@@ -1034,7 +1043,9 @@ class local_secretaria_test_get_user_grades extends local_secretaria_test_base {
 
         $result = $this->operations->get_user_grades('user1', array('course1'));
 
-        $this->assertIdentical($result, array('course1' => null));
+        $this->assertIdentical($result, array(
+            array('course' => 'course1', 'grade' => null),
+        ));
     }
 
     function test_unknown_course() {

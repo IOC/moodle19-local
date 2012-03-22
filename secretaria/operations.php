@@ -350,7 +350,10 @@ class local_secretaria_operations {
 
                 foreach ($grades as $userid => $grade) {
                     $username = $usernames[$userid];
-                    $item['grades'][$username] = $grade->str_grade;
+                    $item['grades'][] = array(
+                        'user' => $username,
+                        'grade' => $grade->str_grade,
+                    );
                 }
 
                 $result[] = $item;
@@ -374,7 +377,10 @@ class local_secretaria_operations {
                 throw new local_secretaria_exception('Unknown course');
             }
             $grade = $this->moodle->grade_get_course_grade($userid, $courseid);
-            $result[$course] = $grade ? $grade->str_grade : null;
+            $result[] = array(
+                'course' => $course,
+                'grade' => $grade ? $grade->str_grade : null,
+            );
         }
 
         return $result;

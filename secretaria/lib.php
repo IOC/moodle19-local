@@ -320,7 +320,9 @@ class local_secretaria_moodle {
         $items = grade_item::fetch_all(array('courseid' => $courseid));
         if ($items) {
             foreach ($items as $item) {
-                if ($item->itemtype == 'category') {
+                if ($item->itemtype == 'course') {
+                    $item->itemname = null;
+                } elseif ($item->itemtype == 'category') {
                     $category = $item->load_parent_category();
                     $item->itemname = $category->get_name();
                 }

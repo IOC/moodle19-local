@@ -386,3 +386,38 @@ class local_secretaria_operations {
         return $result;
     }
 }
+
+interface local_secretaria_moodle {
+    function check_password($password);
+    function commit_transaction();
+    function create_user($auth, $mnethostid, $username, $password,
+                         $firstname, $lastname, $email);
+    function delete_user($record);
+    function delete_role_assignment($courseid, $userid, $roleid);
+    function get_course_id($shortname);
+    function get_group_id($courseid, $name);
+    function get_group_members($groupid, $mnethostid);
+    function get_groups($courseid);
+    function get_role_assignments_by_course($courseid, $mnethostid);
+    function get_role_assignments_by_user($userid);
+    function get_role_id($role);
+    function get_user_id($mnethostid, $username);
+    function get_user_record($mnethostid, $username);
+    function grade_get_course_grade($userid, $courseid);
+    function grade_get_grades($courseid, $itemtype, $itemmodule,
+                              $iteminstance, $userids);
+    function grade_item_fetch_all($courseid);
+    function groups_add_member($groupid, $userid);
+    function groups_delete_group($groupid);
+    function groups_remove_member($groupid, $userid);
+    function insert_group($courseid, $name, $description);
+    function insert_role_assignment($courseid, $userid, $roleid);
+    function mnet_host_id();
+    function mnet_localhost_id();
+    function role_assignment_exists($courseid, $userid, $roleid);
+    function rollback_transaction(Exception $e);
+    function start_transaction();
+    function update_password($userid, $password);
+    function update_record($table, $record);
+    function user_picture_url($userid);
+}

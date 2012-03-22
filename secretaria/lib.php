@@ -10,7 +10,7 @@ class local_secretaria_service {
     private $operations;
 
     function __construct() {
-        $this->moodle = new local_secretaria_moodle;
+        $this->moodle = new local_secretaria_moodle_19;
         $this->operations = new local_secretaria_operations($this->moodle);
     }
 
@@ -198,7 +198,7 @@ class local_secretaria_service {
     );
 }
 
-class local_secretaria_moodle {
+class local_secretaria_moodle_19 implements local_secretaria_moodle {
 
     private $transaction = false;
 

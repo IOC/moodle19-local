@@ -102,7 +102,7 @@ class GetUserTest extends OperationTest {
 
         $result = $this->operations->get_user('user');
 
-        $this->assertThat($result['picture'], $this->isNull());
+        $this->assertThat($result['picture'], $this->equalTo(''));
     }
 
     function test_unknown_user() {

@@ -321,10 +321,11 @@ class local_secretaria_moodle_19 implements local_secretaria_moodle {
         if ($items) {
             foreach ($items as $item) {
                 if ($item->itemtype == 'course') {
-                    $item->itemname = null;
+                    $item->itemmodule = '';
                 } elseif ($item->itemtype == 'category') {
                     $category = $item->load_parent_category();
                     $item->itemname = $category->get_name();
+                    $item->itemmodule = '';
                 }
             }
         }

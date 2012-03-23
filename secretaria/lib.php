@@ -335,15 +335,7 @@ class local_secretaria_moodle_19 implements local_secretaria_moodle {
         return groups_add_member($groupid, $userid);
     }
 
-    function groups_delete_group($groupid) {
-        groups_delete_group($groupid);
-    }
-
-    function groups_remove_member($groupid, $userid) {
-        groups_remove_member($groupid, $userid);
-    }
-
-    function insert_group($courseid, $name, $description) {
+    function groups_create_group($courseid, $name, $description) {
         $record = new stdClass;
         $record->courseid = $courseid;
         $record->name = $name;
@@ -351,6 +343,14 @@ class local_secretaria_moodle_19 implements local_secretaria_moodle {
         $record->timemodified = time();
         $record->timecreated = time();
         insert_record('groups', addslashes_recursive($record));
+    }
+
+    function groups_delete_group($groupid) {
+        groups_delete_group($groupid);
+    }
+
+    function groups_remove_member($groupid, $userid) {
+        groups_remove_member($groupid, $userid);
     }
 
     function insert_role_assignment($courseid, $userid, $roleid) {

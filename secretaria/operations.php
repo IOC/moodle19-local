@@ -239,7 +239,7 @@ class local_secretaria_operations {
             throw new local_secretaria_exception('Duplicate group');
         }
         $this->moodle->start_transaction();
-        $this->moodle->insert_group($courseid, $name, $description);
+        $this->moodle->groups_create_group($courseid, $name, $description);
         $this->moodle->commit_transaction();
     }
 
@@ -408,9 +408,9 @@ interface local_secretaria_moodle {
                               $iteminstance, $userids);
     function grade_item_fetch_all($courseid);
     function groups_add_member($groupid, $userid);
+    function groups_create_group($courseid, $name, $description);
     function groups_delete_group($groupid);
     function groups_remove_member($groupid, $userid);
-    function insert_group($courseid, $name, $description);
     function insert_role_assignment($courseid, $userid, $roleid);
     function mnet_host_id();
     function mnet_localhost_id();

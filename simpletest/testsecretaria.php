@@ -706,7 +706,7 @@ class local_secretaria_test_create_group extends local_secretaria_test_base {
     function test() {
         $this->having_course_id('course1', 101);
         $this->moodle->shouldReceive('start_transaction')->once()->ordered();
-        $this->moodle->shouldReceive('insert_group')
+        $this->moodle->shouldReceive('groups_create_group')
             ->with(101, 'group1', 'Group 1')
             ->once()->ordered();
         $this->moodle->shouldReceive('commit_transaction')->once()->ordered();

@@ -1,18 +1,14 @@
 <?php
 
-defined('MOODLE_INTERNAL') || die();
-
-require_once("$CFG->dirroot/local/secretaria/lib.php");
-
+require_once 'operations.php';
 require_once 'Mockery/Loader.php';
-require_once 'Hamcrest/Hamcrest.php';
 
 $loader = new Mockery\Loader;
 $loader->register();
 
 Mockery::getConfiguration()->allowMockingNonExistentMethods(false);
 
-abstract class local_secretaria_test_base extends UnitTestCase {
+abstract class OperationTest extends PHPUnit_Framework_TestCase {
 
     protected $moodle;
     protected $operations;
@@ -65,80 +61,9 @@ abstract class local_secretaria_test_base extends UnitTestCase {
     }
 }
 
-
-class local_secretaria_test_valid_param extends UnitTestCase {
-
-    function test_raw() {
-        $param = array('type' => 'raw');
-        $this->assertTrue(local_secretaria_service::valid_param($param, 'abc'));
-        $this->assertTrue(local_secretaria_service::valid_param($param, ''));
-        $this->assertFalse(local_secretaria_service::valid_param($param, array()));
-    }
-
-    function test_notags() {
-        $param = array('type' => 'notags');
-        $this->assertTrue(local_secretaria_service::valid_param($param, 'abc'));
-        $this->assertFalse(local_secretaria_service::valid_param($param, '<lang>abc</lang>'));
-        $this->assertFalse(local_secretaria_service::valid_param($param, array()));
-    }
-
-    function test_text() {
-        $param = array('type' => 'text');
-        $this->assertTrue(local_secretaria_service::valid_param($param, '<lang>abc</lang>'));
-        $this->assertFalse(local_secretaria_service::valid_param($param, '<div>abc</div>'));
-        $this->assertFalse(local_secretaria_service::valid_param($param, array()));
-    }
-
-    function test_username() {
-        $param = array('type' => 'username');
-        $this->assertTrue(local_secretaria_service::valid_param($param, 'username'));
-        $this->assertFalse(local_secretaria_service::valid_param($param, 'invalid username!'));
-        $this->assertFalse(local_secretaria_service::valid_param($param, array()));
-    }
-
-    function test_alphanumext() {
-        $param = array('type' => 'alphanumext');
-        $this->assertTrue(local_secretaria_service::valid_param($param, 'abc123-_'));
-        $this->assertFalse(local_secretaria_service::valid_param($param, 'invalid string'));
-        $this->assertFalse(local_secretaria_service::valid_param($param, array()));
-    }
-
-    function test_email() {
-        $param = array('type' => 'email');
-        $this->assertTrue(local_secretaria_service::valid_param($param, 'user@example.org'));
-        $this->assertFalse(local_secretaria_service::valid_param($param, 'invalid email'));
-        $this->assertFalse(local_secretaria_service::valid_param($param, array()));
-    }
-
-    function test_list() {
-        $param = array('type' => 'list', 'of' => array('type' => 'raw'));
-        $this->assertTrue(local_secretaria_service::valid_param($param, array()));
-        $this->assertTrue(local_secretaria_service::valid_param($param, array('abc', 'def')));
-        $this->assertFalse(local_secretaria_service::valid_param($param, array('abc', 123)));
-        $this->assertFalse(local_secretaria_service::valid_param($param, true));
-        $this->assertFalse(local_secretaria_service::valid_param($param, 123));
-    }
-
-    function test_dict() {
-        $param = array(
-            'type' => 'dict',
-            'required' => array('a' => array('type' => 'raw')),
-            'optional' => array('b' => array('type' => 'raw')),
-        );
-        $this->assertTrue(local_secretaria_service::valid_param($param, array('a' => 'A')));
-        $this->assertTrue(local_secretaria_service::valid_param($param, array('a' => 'A', 'b' => 'B')));
-        $this->assertFalse(local_secretaria_service::valid_param($param, array('a' => 123)));
-        $this->assertFalse(local_secretaria_service::valid_param($param, array()));
-        $this->assertFalse(local_secretaria_service::valid_param($param, array('a' => 'A', 'b' => 'B', 'c' => 'C')));
-        $this->assertFalse(local_secretaria_service::valid_param($param, true));
-        $this->assertFalse(local_secretaria_service::valid_param($param, 123));
-    }
-}
-
-
 /* Users */
 
-class local_secretaria_test_get_user extends local_secretaria_test_base {
+class GetUserTest extends OperationTest {
 
     function setUp() {
         parent::setUp();
@@ -160,13 +85,13 @@ class local_secretaria_test_get_user extends local_secretaria_test_base {
 
         $result = $this->operations->get_user('user');
 
-        $this->assertEqual($result, array(
+        $this->assertThat($result, $this->equalTo(array(
             'username' => 'user',
             'firstname' => 'First',
             'lastname' => 'Last',
             'email' => 'user@example.org',
             'picture' => 'http://example.org/user/pix.php/201/f1.jpg',
-        ));
+        )));
     }
 
     function test_no_picture() {
@@ -177,17 +102,16 @@ class local_secretaria_test_get_user extends local_secretaria_test_base {
 
         $result = $this->operations->get_user('user');
 
-        $this->assertNull($result['picture']);
+        $this->assertThat($result['picture'], $this->isNull());
     }
 
     function test_unknown_user() {
-        $this->expectException(new local_secretaria_exception('Unknown user'));
+        $this->setExpectedException('local_secretaria_exception', 'Unknown user');
         $this->operations->get_user('user');
     }
 }
 
-
-class local_secretaria_test_create_user extends local_secretaria_test_base {
+class CreateUserTest extends OperationTest {
 
     function setUp() {
         parent::setUp();
@@ -230,7 +154,7 @@ class local_secretaria_test_create_user extends local_secretaria_test_base {
         $this->properties['username'] = '';
         $this->having_mnet_localhost_id(101);
         $this->having_mnet_host_id(101);
-        $this->expectException(new local_secretaria_exception('Invalid parameters'));
+        $this->setExpectedException('local_secretaria_exception', 'Invalid parameters');
 
         $this->operations->create_user($this->properties);
     }
@@ -239,7 +163,7 @@ class local_secretaria_test_create_user extends local_secretaria_test_base {
         $this->properties['firstname'] = '';
         $this->having_mnet_localhost_id(101);
         $this->having_mnet_host_id(101);
-        $this->expectException(new local_secretaria_exception('Invalid parameters'));
+        $this->setExpectedException('local_secretaria_exception', 'Invalid parameters');
 
         $this->operations->create_user($this->properties);
     }
@@ -248,7 +172,7 @@ class local_secretaria_test_create_user extends local_secretaria_test_base {
         $this->properties['lastname'] = '';
         $this->having_mnet_localhost_id(101);
         $this->having_mnet_host_id(101);
-        $this->expectException(new local_secretaria_exception('Invalid parameters'));
+        $this->setExpectedException('local_secretaria_exception', 'Invalid parameters');
 
         $this->operations->create_user($this->properties);
     }
@@ -257,7 +181,7 @@ class local_secretaria_test_create_user extends local_secretaria_test_base {
         $this->having_mnet_localhost_id(101);
         $this->having_mnet_host_id(101);
         $this->having_user_id(101, 'user1', 201);
-        $this->expectException(new local_secretaria_exception('Duplicate username'));
+        $this->setExpectedException('local_secretaria_exception', 'Duplicate username');
 
         $this->operations->create_user($this->properties);
     }
@@ -267,14 +191,13 @@ class local_secretaria_test_create_user extends local_secretaria_test_base {
         $this->having_mnet_host_id(101);
         $this->moodle->shouldReceive('check_password')
             ->with('abc123')->andReturn(false);
-        $this->expectException(new local_secretaria_exception('Invalid password'));
+        $this->setExpectedException('local_secretaria_exception', 'Invalid password');
 
         $this->operations->create_user($this->properties);
     }
 }
 
-
-class local_secretaria_test_update_user extends local_secretaria_test_base {
+class UpdateUserTest extends OperationTest {
 
     function test() {
         $record = (object) array(
@@ -309,7 +232,7 @@ class local_secretaria_test_update_user extends local_secretaria_test_base {
     function test_unknown_user() {
         $this->having_mnet_host_id(101);
         $this->having_mnet_localhost_id(101);
-        $this->expectException(new local_secretaria_exception('Unknown user'));
+        $this->setExpectedException('local_secretaria_exception', 'Unknown user');
 
         $this->operations->update_user('user1', array('username' => 'user1'));
     }
@@ -318,7 +241,7 @@ class local_secretaria_test_update_user extends local_secretaria_test_base {
         $this->having_mnet_host_id(101);
         $this->having_mnet_localhost_id(101);
         $this->having_user_id(101, 'user1', 201);
-        $this->expectException(new local_secretaria_exception('Invalid parameters'));
+        $this->setExpectedException('local_secretaria_exception', 'Invalid parameters');
 
         $this->operations->update_user('user1', array('username' => ''));
     }
@@ -328,7 +251,7 @@ class local_secretaria_test_update_user extends local_secretaria_test_base {
         $this->having_mnet_localhost_id(101);
         $this->having_user_id(101, 'user1', 201);
         $this->having_user_id(101, 'user2', 202);
-        $this->expectException(new local_secretaria_exception('Duplicate username'));
+        $this->setExpectedException('local_secretaria_exception', 'Duplicate username');
 
         $this->operations->update_user('user1', array('username' => 'user2'));
     }
@@ -363,7 +286,7 @@ class local_secretaria_test_update_user extends local_secretaria_test_base {
         $this->having_user_id(101, 'user1', 201);
         $this->moodle->shouldReceive('check_password')
             ->with('abc123')->andReturn(false);
-        $this->expectException(new local_secretaria_exception('Invalid password'));
+        $this->setExpectedException('local_secretaria_exception', 'Invalid password');
 
         $this->operations->update_user('user1', array('password' => 'abc123'));
     }
@@ -382,7 +305,7 @@ class local_secretaria_test_update_user extends local_secretaria_test_base {
         $this->having_mnet_host_id(101);
         $this->having_mnet_localhost_id(101);
         $this->having_user_id(101, 'user1', 201);
-        $this->expectException(new local_secretaria_exception('Invalid parameters'));
+        $this->setExpectedException('local_secretaria_exception', 'Invalid parameters');
 
         $this->operations->update_user('user1', array('firstname' => ''));
     }
@@ -391,7 +314,7 @@ class local_secretaria_test_update_user extends local_secretaria_test_base {
         $this->having_mnet_host_id(101);
         $this->having_mnet_localhost_id(101);
         $this->having_user_id(101, 'user1', 201);
-        $this->expectException(new local_secretaria_exception('Invalid parameters'));
+        $this->setExpectedException('local_secretaria_exception', 'Invalid parameters');
 
         $this->operations->update_user('user1', array('lastname' => ''));
     }
@@ -410,8 +333,7 @@ class local_secretaria_test_update_user extends local_secretaria_test_base {
     }
 }
 
-
-class local_secretaria_test_delete_user extends local_secretaria_test_base {
+class DeleteUserTest extends OperationTest {
 
     function test() {
         $record = (object) array(
@@ -435,15 +357,15 @@ class local_secretaria_test_delete_user extends local_secretaria_test_base {
 
     function test_unknown_user() {
         $this->having_mnet_host_id(101);
-        $this->expectException(new local_secretaria_exception('Unknown user'));
+        $this->setExpectedException('local_secretaria_exception', 'Unknown user');
+
         $this->operations->delete_user('user1');
     }
 }
 
-
 /* Enrolments */
 
-class local_secretaria_test_get_course_enrolments extends local_secretaria_test_base {
+class GetCcourseEnrolmentsTest extends OperationTest {
 
     function test() {
         $records = array(
@@ -458,10 +380,10 @@ class local_secretaria_test_get_course_enrolments extends local_secretaria_test_
 
         $result = $this->operations->get_course_enrolments('course1');
 
-        $this->assertEqual($result, array(
+        $this->assertThat($result, $this->equalTo(array(
             array('user' => 'user1', 'role' => 'role1'),
             array('user' => 'user2', 'role' => 'role2'),
-        ));
+        )));
     }
 
     function test_no_enrolments() {
@@ -472,18 +394,17 @@ class local_secretaria_test_get_course_enrolments extends local_secretaria_test_
 
         $result = $this->operations->get_course_enrolments('course1');
 
-        $this->assertEqual($result, array());
+        $this->assertThat($result, $this->equalTo(array()));
     }
 
     function test_unknown_course() {
         $this->having_mnet_host_id(201);
-        $this->expectException(new local_secretaria_exception('Unknown course'));
+        $this->setExpectedException('local_secretaria_exception', 'Unknown course');
         $this->operations->get_course_enrolments('course1');
     }
 }
 
-
-class local_secretaria_test_get_user_enrolments extends local_secretaria_test_base {
+class GetUserEnrolmentsTest extends OperationTest {
 
     function test() {
         $records = array(
@@ -497,10 +418,10 @@ class local_secretaria_test_get_user_enrolments extends local_secretaria_test_ba
 
         $result = $this->operations->get_user_enrolments('user1');
 
-        $this->assertEqual($result, array(
+        $this->assertThat($result, $this->equalTo(array(
             array('course' => 'course1', 'role' => 'role1'),
             array('course' => 'course2', 'role' => 'role2'),
-        ));
+        )));
     }
 
     function test_no_enrolments() {
@@ -511,18 +432,17 @@ class local_secretaria_test_get_user_enrolments extends local_secretaria_test_ba
 
         $result = $this->operations->get_user_enrolments('user1');
 
-        $this->assertEqual($result, array());
+        $this->assertThat($result, $this->equalTo(array()));
     }
 
     function test_unknown_user() {
         $this->having_mnet_host_id(101);
-        $this->expectException(new local_secretaria_exception('Unknown user'));
+        $this->setExpectedException('local_secretaria_exception', 'Unknown user');
         $this->operations->get_user_enrolments('user1');
     }
 }
 
-
-class local_secretaria_test_enrol_users extends local_secretaria_test_base {
+class EnrolUsersTest extends OperationTest {
 
     function test() {
         $this->having_mnet_host_id(101);
@@ -566,7 +486,7 @@ class local_secretaria_test_enrol_users extends local_secretaria_test_base {
         $this->having_role_id('role1', 401);
         $this->moodle->shouldReceive('start_transaction')->once();
 
-        $this->expectException(new local_secretaria_exception('Unknown course'));
+        $this->setExpectedException('local_secretaria_exception', 'Unknown course');
         $this->operations->enrol_users(array(
             array('course' => 'course1', 'user' => 'user1', 'role' => 'role1'),
         ));
@@ -578,7 +498,7 @@ class local_secretaria_test_enrol_users extends local_secretaria_test_base {
         $this->having_role_id('role1', 401);
         $this->moodle->shouldReceive('start_transaction')->once();
 
-        $this->expectException(new local_secretaria_exception('Unknown user'));
+        $this->setExpectedException('local_secretaria_exception', 'Unknown user');
         $this->operations->enrol_users(array(
             array('course' => 'course1', 'user' => 'user1', 'role' => 'role1'),
         ));
@@ -590,15 +510,14 @@ class local_secretaria_test_enrol_users extends local_secretaria_test_base {
         $this->having_user_id(101, 'user1', 301);
         $this->moodle->shouldReceive('start_transaction')->once();
 
-        $this->expectException(new local_secretaria_exception('Unknown role'));
+        $this->setExpectedException('local_secretaria_exception', 'Unknown role');
         $this->operations->enrol_users(array(
             array('course' => 'course1', 'user' => 'user1', 'role' => 'role1'),
         ));
     }
 }
 
-
-class local_secretaria_test_unenrol_users extends local_secretaria_test_base {
+class UnenrolUsersTest extends OperationTest {
 
     function test() {
         $this->having_mnet_host_id(101);
@@ -627,7 +546,7 @@ class local_secretaria_test_unenrol_users extends local_secretaria_test_base {
         $this->having_role_id('role1', 401);
         $this->moodle->shouldReceive('start_transaction')->once();
 
-        $this->expectException(new local_secretaria_exception('Unknown course'));
+        $this->setExpectedException('local_secretaria_exception', 'Unknown course');
         $this->operations->unenrol_users(array(
             array('course' => 'course1', 'user' => 'user1', 'role' => 'role1'),
        ));
@@ -639,7 +558,7 @@ class local_secretaria_test_unenrol_users extends local_secretaria_test_base {
         $this->having_role_id('role1', 401);
         $this->moodle->shouldReceive('start_transaction')->once();
 
-        $this->expectException(new local_secretaria_exception('Unknown user'));
+        $this->setExpectedException('local_secretaria_exception', 'Unknown user');
         $this->operations->unenrol_users(array(
             array('course' => 'course1', 'user' => 'user1', 'role' => 'role1'),
         ));
@@ -651,17 +570,16 @@ class local_secretaria_test_unenrol_users extends local_secretaria_test_base {
         $this->having_user_id(101, 'user1', 301);
         $this->moodle->shouldReceive('start_transaction')->once();
 
-        $this->expectException(new local_secretaria_exception('Unknown role'));
+        $this->setExpectedException('local_secretaria_exception', 'Unknown role');
         $this->operations->unenrol_users(array(
             array('course' => 'course1', 'user' => 'user1', 'role' => 'role1'),
         ));
     }
 }
 
-
 /* Groups */
 
-class local_secretaria_test_get_groups extends local_secretaria_test_base {
+class GetGroupsTest extends OperationTest {
 
     function test() {
         $records = array(
@@ -678,10 +596,10 @@ class local_secretaria_test_get_groups extends local_secretaria_test_base {
 
         $result = $this->operations->get_groups('course1');
 
-        $this->assertEqual($result, array(
+        $this->assertThat($result, $this->equalTo(array(
             array('name' => 'group1', 'description' => 'first group'),
             array('name' => 'group2', 'description' => 'second group'),
-        ));
+        )));
     }
 
     function test_no_groups() {
@@ -691,17 +609,16 @@ class local_secretaria_test_get_groups extends local_secretaria_test_base {
 
         $result = $this->operations->get_groups('course1');
 
-        $this->assertEqual($result, array());
+        $this->assertThat($result, $this->equalTo(array()));
     }
 
     function test_unknown_course() {
-        $this->expectException(new local_secretaria_exception('Unknown course'));
+        $this->setExpectedException('local_secretaria_exception', 'Unknown course');
         $this->operations->get_groups('course1');
     }
 }
 
-
-class local_secretaria_test_create_group extends local_secretaria_test_base {
+class CreateGroupTest extends OperationTest {
 
     function test() {
         $this->having_course_id('course1', 101);
@@ -715,13 +632,13 @@ class local_secretaria_test_create_group extends local_secretaria_test_base {
     }
 
     function test_unknown_course() {
-        $this->expectException(new local_secretaria_exception('Unknown course'));
+        $this->setExpectedException('local_secretaria_exception', 'Unknown course');
         $this->operations->create_group('course1', 'group1', 'Group 1');
     }
 
     function test_blank_name() {
         $this->having_course_id('course1', 101);
-        $this->expectException(new local_secretaria_exception('Invalid parameters'));
+        $this->setExpectedException('local_secretaria_exception', 'Invalid parameters');
 
         $this->operations->create_group('course1', '', 'Group 1');
     }
@@ -730,13 +647,12 @@ class local_secretaria_test_create_group extends local_secretaria_test_base {
         $this->having_course_id('course1', 101);
         $this->having_group_id(101, 'group1', 201);
 
-        $this->expectException(new local_secretaria_exception('Duplicate group'));
+        $this->setExpectedException('local_secretaria_exception', 'Duplicate group');
         $this->operations->create_group('course1', 'group1', 'Group 1');
     }
 }
 
-
-class local_secretaria_test_delete_group extends local_secretaria_test_base {
+class DeleteGroupTest extends OperationTest {
 
     function test() {
         $this->having_course_id('course1', 101);
@@ -750,19 +666,18 @@ class local_secretaria_test_delete_group extends local_secretaria_test_base {
     }
 
     function test_unknown_course() {
-        $this->expectException(new local_secretaria_exception('Unknown course'));
+        $this->setExpectedException('local_secretaria_exception', 'Unknown course');
         $this->operations->delete_group('course1', 'group1');
     }
 
     function test_unknown_group() {
         $this->having_course_id('course1', 101);
-        $this->expectException(new local_secretaria_exception('Unknown group'));
+        $this->setExpectedException('local_secretaria_exception', 'Unknown group');
         $this->operations->delete_group('course1', 'group1');
     }
 }
 
-
-class local_secretaria_test_get_group_members extends local_secretaria_test_base {
+class GetGroupMembersTest extends OperationTest {
 
     function test() {
         $records = array(
@@ -777,7 +692,7 @@ class local_secretaria_test_get_group_members extends local_secretaria_test_base
 
         $result = $this->operations->get_group_members('course1', 'group1');
 
-        $this->assertEqual($result, array('user1', 'user2'));
+        $this->assertThat($result, $this->equalTo(array('user1', 'user2')));
     }
 
     function test_no_members() {
@@ -789,25 +704,24 @@ class local_secretaria_test_get_group_members extends local_secretaria_test_base
 
         $result = $this->operations->get_group_members('course1', 'group1');
 
-        $this->assertEqual($result, array());
+        $this->assertThat($result, $this->equalTo(array()));
     }
 
     function test_unknown_course() {
         $this->having_mnet_host_id(301);
-        $this->expectException(new local_secretaria_exception('Unknown course'));
+        $this->setExpectedException('local_secretaria_exception', 'Unknown course');
         $this->operations->get_group_members('course1', 'group1');
     }
 
     function test_unknown_group() {
         $this->having_course_id('course1', 101);
         $this->having_mnet_host_id(301);
-        $this->expectException(new local_secretaria_exception('Unknown group'));
+        $this->setExpectedException('local_secretaria_exception', 'Unknown group');
         $this->operations->get_group_members('course1', 'group1');
     }
 }
 
-
-class local_secretaria_test_add_group_members extends local_secretaria_test_base {
+class AddGroupMembersTest extends OperationTest {
 
     function test() {
         $this->having_course_id('course1', 101);
@@ -827,14 +741,14 @@ class local_secretaria_test_add_group_members extends local_secretaria_test_base
 
     function test_unknown_course() {
         $this->having_mnet_host_id(301);
-        $this->expectException(new local_secretaria_exception('Unknown course'));
+        $this->setExpectedException('local_secretaria_exception', 'Unknown course');
         $this->operations->add_group_members('course1', 'group1', array());
     }
 
     function test_unknown_group() {
         $this->having_course_id('course1', 101);
         $this->having_mnet_host_id(301);
-        $this->expectException(new local_secretaria_exception('Unknown group'));
+        $this->setExpectedException('local_secretaria_exception', 'Unknown group');
         $this->operations->add_group_members('course1', 'group1', array());
     }
 
@@ -844,13 +758,12 @@ class local_secretaria_test_add_group_members extends local_secretaria_test_base
         $this->having_mnet_host_id(301);
         $this->moodle->shouldReceive('start_transaction')->once();
 
-        $this->expectException(new local_secretaria_exception('Unknown user'));
+        $this->setExpectedException('local_secretaria_exception', 'Unknown user');
         $this->operations->add_group_members('course1', 'group1', array('user1'));
     }
 }
 
-
-class local_secretaria_test_remove_group_members extends local_secretaria_test_base {
+class RemoveGroupMembersTest extends OperationTest {
 
     function test() {
         $this->having_course_id('course1', 101);
@@ -871,14 +784,14 @@ class local_secretaria_test_remove_group_members extends local_secretaria_test_b
 
     function test_unknown_course() {
         $this->having_mnet_host_id(301);
-        $this->expectException(new local_secretaria_exception('Unknown course'));
+        $this->setExpectedException('local_secretaria_exception', 'Unknown course');
         $this->operations->remove_group_members('course1', 'group1', array());
     }
 
     function test_unknown_group() {
         $this->having_course_id('course1', 101);
         $this->having_mnet_host_id(301);
-        $this->expectException(new local_secretaria_exception('Unknown group'));
+        $this->setExpectedException('local_secretaria_exception', 'Unknown group');
         $this->operations->remove_group_members('course1', 'group1', array());
     }
 
@@ -887,15 +800,14 @@ class local_secretaria_test_remove_group_members extends local_secretaria_test_b
         $this->having_group_id(101, 'group1', 201);
         $this->having_mnet_host_id(301);
         $this->moodle->shouldReceive('start_transaction')->once();
-        $this->expectException(new local_secretaria_exception('Unknown user'));
+        $this->setExpectedException('local_secretaria_exception', 'Unknown user');
         $this->operations->remove_group_members('course1', 'group1', array('user1'));
     }
 }
 
-
 /* Grades */
 
-class local_secretaria_test_get_course_grades extends local_secretaria_test_base {
+class GetCourseGradesTest extends OperationTest {
 
     function test() {
         $grade_items = array(
@@ -953,7 +865,7 @@ class local_secretaria_test_get_course_grades extends local_secretaria_test_base
         $result = $this->operations->get_course_grades(
             'course1', array('user1', 'user2'));
 
-        $this->assertEqual($result, array(
+        $this->assertThat($result, $this->equalTo(array(
             array('type' => 'course',
                   'module' => null,
                   'idnumber' => 'id101',
@@ -978,7 +890,7 @@ class local_secretaria_test_get_course_grades extends local_secretaria_test_base
                       array('user' => 'user1', 'grade' => '7.1'),
                       array('user' => 'user2', 'grade' => '7.2'),
                   )),
-        ));
+        )));
     }
 
     function test_no_grade_items() {
@@ -992,25 +904,24 @@ class local_secretaria_test_get_course_grades extends local_secretaria_test_base
         $result = $this->operations->get_course_grades(
             'course1', array('user1', 'user2'));
 
-        $this->assertIdentical($result, array());
+        $this->assertThat($result, $this->equalTo(array()));
     }
 
     function test_unknown_course() {
         $this->having_mnet_host_id(201);
-        $this->expectException(new local_secretaria_exception('Unknown course'));
+        $this->setExpectedException('local_secretaria_exception', 'Unknown course');
         $this->operations->get_course_grades('course1', array('user1', 'user2'));
     }
 
     function test_unknown_user() {
         $this->having_course_id('course1', 101);
         $this->having_mnet_host_id(201);
-        $this->expectException(new local_secretaria_exception('Unknown user'));
+        $this->setExpectedException('local_secretaria_exception', 'Unknown user');
         $this->operations->get_course_grades('course1', array('user1', 'user2'));
     }
 }
 
-
-class local_secretaria_test_get_user_grades extends local_secretaria_test_base {
+class GetUserGradesTest extends OperationTest {
 
     function test() {
         $grade1 = (object) array('str_grade' => '5.1');
@@ -1028,10 +939,10 @@ class local_secretaria_test_get_user_grades extends local_secretaria_test_base {
         $result = $this->operations->get_user_grades(
             'user1', array('course1', 'course2'));
 
-        $this->assertEqual($result, array(
+        $this->assertThat($result, $this->equalTo(array(
             array('course' => 'course1', 'grade' => '5.1'),
             array('course' => 'course2', 'grade' => '6.2'),
-        ));
+        )));
     }
 
     function test_no_grade() {
@@ -1043,21 +954,21 @@ class local_secretaria_test_get_user_grades extends local_secretaria_test_base {
 
         $result = $this->operations->get_user_grades('user1', array('course1'));
 
-        $this->assertIdentical($result, array(
+        $this->assertThat($result, $this->equalTo(array(
             array('course' => 'course1', 'grade' => null),
-        ));
+        )));
     }
 
     function test_unknown_course() {
         $this->having_mnet_host_id(101);
         $this->having_user_id(101, 'user1', 201);
-        $this->expectException(new local_secretaria_exception('Unknown course'));
+        $this->setExpectedException('local_secretaria_exception', 'Unknown course');
         $this->operations->get_user_grades('user1', array('course1', 'course2'));
     }
 
     function test_unknown_user() {
         $this->having_mnet_host_id(101);
-        $this->expectException(new local_secretaria_exception('Unknown user'));
+        $this->setExpectedException('local_secretaria_exception', 'Unknown user');
         $this->operations->get_user_grades('user1', array());
     }
 }

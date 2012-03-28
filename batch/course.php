@@ -158,7 +158,7 @@ class batch_course {
         $restore->restore_gradebook_history = 0;
         $restore->course_startdateoffset =
             86400 * (int) round((make_timestamp($startyear, $startmonth, $startday)
-                                 - $SES11SION->course_header->course_startdate) / 86400);
+                                 - $SESSION->course_header->course_startdate) / 86400);
         $restore->restore_restorecatto = 0;
         $restore->backup_version = $SESSION->info->backup_backup_version;
         $restore->rolesmapping = array();

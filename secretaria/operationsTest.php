@@ -972,3 +972,49 @@ class GetUserGradesTest extends OperationTest {
         $this->operations->get_user_grades('user1', array());
     }
 }
+
+/* Misc */
+
+class HasCourseTest extends OperationTest {
+
+    function test() {
+        $this->having_course_id('course1', 101);
+        $result = $this->operations->has_course('course1');
+        $this->assertThat($result, $this->isTrue());
+    }
+
+    function test_no_course() {
+        $result = $this->operations->has_course('course1');
+        $this->assertThat($result, $this->isFalse());
+    }
+}
+
+
+
+class GetCoursesTest extends OperationTest {
+
+    function test() {
+        $records = array(
+            (object) array('id' => 101, 'shortname' => 'course1'),
+            (object) array('id' => 102, 'shortname' => 'course2'),
+            (object) array('id' => 103, 'shortname' => 'course3'),
+        );
+        $this->moodle->shouldReceive('get_courses')
+            ->with()->andReturn($records);
+
+        $result = $this->operations->get_courses();
+
+        $this->assertThat($result, $this->equalTo(
+            array('course1', 'course2', 'course3')
+        ));
+    }
+
+    function test_no_courses() {
+        $this->moodle->shouldReceive('get_courses')
+            ->with()->andReturn(false);
+
+        $result = $this->operations->get_courses();
+
+        $this->assertThat($result, $this->equalTo(array()));
+    }
+}

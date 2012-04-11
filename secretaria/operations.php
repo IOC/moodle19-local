@@ -385,6 +385,22 @@ class local_secretaria_operations {
 
         return $result;
     }
+
+    /* Misc */
+
+    function has_course($shortname) {
+        return (bool) $this->moodle->get_course_id($shortname);
+    }
+
+    function get_courses() {
+        $result = array();
+        if ($records = $this->moodle->get_courses()) {
+            foreach ($records as $record) {
+                $result[] = $record->shortname;
+            }
+        }
+        return $result;
+    }
 }
 
 interface local_secretaria_moodle {
@@ -395,6 +411,7 @@ interface local_secretaria_moodle {
     function delete_user($record);
     function delete_role_assignment($courseid, $userid, $roleid);
     function get_course_id($shortname);
+    function get_courses();
     function get_group_id($courseid, $name);
     function get_group_members($groupid, $mnethostid);
     function get_groups($courseid);

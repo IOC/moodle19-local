@@ -196,6 +196,14 @@ class local_secretaria_service {
         'user' => array('type' => 'username'),
         'courses' => array('type' => 'list', 'of' => array('type' => 'text')),
     );
+
+    /* Misc */
+
+    private $has_course_parameters = array(
+        'course' => array('type' => 'text'),
+    );
+
+    private $get_courses_parameters = array();
 }
 
 class local_secretaria_moodle_19 implements local_secretaria_moodle {
@@ -247,6 +255,10 @@ class local_secretaria_moodle_19 implements local_secretaria_moodle {
 
     function get_course_id($shortname) {
         return get_field('course', 'id', 'shortname', addslashes($shortname));
+    }
+
+    function get_courses() {
+        return get_records('course', 'id != '. SITEID, '', 'id, shortname');
     }
 
     function get_group_id($courseid, $name) {

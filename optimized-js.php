@@ -17,7 +17,7 @@ header('Last-Modified: ' . gmdate("D, d M Y H:i:s", time()) . ' GMT');
 header('Expires: ' . gmdate("D, d M Y H:i:s", time() + $lifetime) . ' GMT');
 header('Cache-Control: max-age='. $lifetime);
 header('Pragma: ');
-header("Content-type: application/javascript");
+header("Content-type: application/x-javascript");
 
 $t = microtime(true);
 

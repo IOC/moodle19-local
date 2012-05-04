@@ -2,7 +2,7 @@
 <p id="errorlog_error"><?php echo $error; ?></p>
 <?php else: ?>
 <div id="errorlog_scroll">
-  <pre id="errorlog_content"><?php echo $content; ?></pre>
+  <pre id="errorlog_content"><?php echo s($content); ?></pre>
 </div>
 <form id="errorlog_form" method="get">
   <p><?php print_string('errorlog_filter', 'local'); ?>:

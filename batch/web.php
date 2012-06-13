@@ -73,14 +73,14 @@ class batch_web {
 
         admin_externalpage_setup('local_batch');
 
-        require_js("{$CFG->wwwroot}/local/lib/jquery/jquery-1.4.2.min.js");
-        require_js("{$CFG->wwwroot}/local/lib/jquery/jquery-ui-1.8.1.custom.min.js");
+        require_js("{$CFG->wwwroot}/local/lib/jquery/jquery.min.js");
+        require_js("{$CFG->wwwroot}/local/lib/jquery/jquery-ui.min.js");
         require_js($this->wwwroot() . '/web.js');
         if ($include_javascript) {
             require_js($this->wwwroot() . "/views/{$this->current_view}.js" );
         }
 
-        $CFG->stylesheets[] = "{$CFG->wwwroot}//local/lib/jquery/jquery-ui-1.8.1.custom.css";
+        $CFG->stylesheets[] = "{$CFG->wwwroot}//local/lib/jquery/jquery-ui.css";
         $CFG->stylesheets[] = "{$CFG->wwwroot}/local/batch/styles.css";
 
         admin_externalpage_print_header();

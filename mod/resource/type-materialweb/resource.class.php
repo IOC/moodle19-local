@@ -29,7 +29,7 @@ class resource_materialweb extends resource_base {
         add_to_log($course->id, "resource", "view", "view.php?id={$cm->id}",
                    $resource->id, $cm->id);
 
-        require_js($CFG->wwwroot . '/local/lib/jquery/jquery-1.4.2.min.js');
+        require_js($CFG->wwwroot . '/local/lib/jquery/jquery.min.js');
         require_js($CFG->wwwroot . '/mod/resource/type/materialweb/client.js');
 
         parent::display();

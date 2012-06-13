@@ -10,7 +10,7 @@ require_capability('moodle/site:doanything',
 
 admin_externalpage_setup('local_errorlog');
 
-require_js("{$CFG->wwwroot}/local/lib/jquery/jquery-1.4.2.min.js");
+require_js("{$CFG->wwwroot}/local/lib/jquery/jquery.min.js");
 require_js("{$CFG->wwwroot}/local/errorlog/index.js");
 $CFG->stylesheets[] = "{$CFG->wwwroot}/local/errorlog/index.css";
 

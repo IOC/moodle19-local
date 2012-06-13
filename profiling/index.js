@@ -2,7 +2,7 @@ $(document).ready(function() {
 
     var parse_hash = function() {
         var result = {year: '', month: '', day: '', hour: ''};
-        var names = ['year', 'month', 'day', 'hoir'];
+        var names = ['year', 'month', 'day', 'hour'];
         var hash = window.location.hash;
         var i, values;
 
@@ -22,7 +22,7 @@ $(document).ready(function() {
     }
 
     var update = function(params) {
-        $('body').css('cursor', 'wait');
+        $('#stats').addClass('updating');
         $.getJSON('ajax.php', params, function(data) {
             var hits, time, chart;
             update_select('stats-year', data.years, data.year);
@@ -35,7 +35,7 @@ $(document).ready(function() {
             update_table('stats-courses', data.courses);
             update_table('stats-scripts', data.scripts);
             update_hash(data.year, data.month, data.day, data.hour);
-            $('body').css('cursor', 'auto');
+            $('#stats').removeClass('updating');
         });
     }
 
@@ -153,6 +153,7 @@ $(document).ready(function() {
     $('#stats-month').change(change);
     $('#stats-day').change(change);
     $('#stats-hour').change(change);
+    $('#stats-refresh').click(change);
 
     init();
 });

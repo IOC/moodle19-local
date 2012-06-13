@@ -1,3 +1,7 @@
+#stats.updating * {
+    cursor: wait;
+}
+
 #stats-nav {
     margin-bottom: 1em;
 }
@@ -6,8 +10,12 @@
     width: 4em;
 }
 
-#stats-year, #stats-month, #stats-day, #stats-hour, #stats-hits {
+#stats-nav select, #stats-nav span {
     margin-right: 1em;
+}
+
+#stats-hits, #stats-time {
+    font-weight: bold;
 }
 
 #stats-chart {
@@ -26,5 +34,7 @@
 }
 
 .jqplot-highlighter-tooltip {
-    background: rgba(240,240,240,0.9);
+    color: black;
+    background-color: white;
+    padding: 0.1em 0.4em;
 }

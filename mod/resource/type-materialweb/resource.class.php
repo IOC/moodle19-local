@@ -43,10 +43,10 @@ class resource_materialweb extends resource_base {
                                           $this->strresource),
                      navmenu($course, $cm));
 
-        echo '<object id="material" name="material" type="text/html"'
-            .  ' data="' . s($url) . '" width="100%" height="500">'
+        echo '<iframe id="material" src="' . s($url) . '" '
+            . 'width="100%" height="500" frameBorder="0">'
             . '<a href="' . s($url) . '">' . $pagetitle .'</a>'
-            . '</object>';
+            . '</iframe>';
 
         print_footer($course);
     }

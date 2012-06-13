@@ -1,5 +1,8 @@
 $(document).ready(function() {
-    $('#material').load(function() {
-        this.height = window.frames['material'].document.body.scrollHeight;
-    });
+    var resize = function() {
+        var iframe = document.getElementById("material");
+        iframe.height = iframe.contentWindow.document.body.scrollHeight + 20;
+    };
+    $('#material').load(resize);
+    $(window).resize(resize);
 });

@@ -89,7 +89,7 @@ $(document).ready(function() {
                                      tickOptions: {formatter: formatter_hits}},
                              y2axis: {autoscale: true,
                                       tickOptions: {formatter: formatter_time}}},
-                      highlighter: {tooltipAxes: 'y', formatString: '%s'},
+                      highlighter: {show: true, tooltipAxes: 'y', tooltipLocation: 'n'},
                       cursor: {show: false}});
         } else {
             $("#stats-chart").hide();

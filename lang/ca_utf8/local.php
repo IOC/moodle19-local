@@ -29,3 +29,6 @@ $string['testing_mode'] = 'Mode de proves';
 $string['materials_secret_token'] = 'Token materials secrets';
 $string['materials_secret_url'] = 'URL materials secrets';
 $string['materials_url'] = 'URL materials';
+$string['myremotecourses'] = 'Els meus cursos de $a';
+$string['myremoteerror'] = 'No s\'ha pogut recuperar el resum dels cursos.';
+$string['myremotehost'] = 'Servidor remot del meu Moodle';

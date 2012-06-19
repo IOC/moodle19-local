@@ -43,6 +43,18 @@ if ($hassiteconfig) {
                                          '', '0')
     );
 
+    $where = 'id != '.$CFG->mnet_localhost_id
+        . ' AND  id != '.$CFG->mnet_all_hosts_id
+        . ' AND deleted = 0';
+    $hosts = get_records_select_menu('mnet_host', $where, '', 'id, name');
+    $hosts[0] = '';
+    asort($hosts);
+    $settings->add(
+        new admin_setting_configselect('local_myremotehost',
+                                       get_string('myremotehost', 'local'),
+                                       '', '0', $hosts)
+    );
+
     $ADMIN->add('local', $settings);
 
     $pages = array('batch', 'errorlog', 'profiling');

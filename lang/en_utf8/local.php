@@ -23,3 +23,6 @@ $string['testing_mode'] = 'Testing mode';
 $string['materials_secret_token'] = 'Secret materials token';
 $string['materials_secret_url'] = 'Secret materials URL';
 $string['materials_url'] = 'Materials URL';
+$string['myremotecourses'] = 'My courses from $a';
+$strong['myremoteerror'] = 'Could not retrieve overview of courses.';
+$string['myremotehost'] = 'My Moodle remote host';

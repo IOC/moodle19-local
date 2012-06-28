@@ -30,5 +30,6 @@ $string['materials_secret_token'] = 'Token materials secrets';
 $string['materials_secret_url'] = 'URL materials secrets';
 $string['materials_url'] = 'URL materials';
 $string['myremotecourses'] = 'Els meus cursos de $a';
-$string['myremoteerror'] = 'No s\'ha pogut recuperar el resum dels cursos.';
+$string['myremotenocourses'] = 'No s\'ha trobat cap curs';
+$string['myremotetimeout'] = 'S\'ha produït un error en recuperar els cursos remots.';
 $string['myremotehost'] = 'Servidor remot del meu Moodle';

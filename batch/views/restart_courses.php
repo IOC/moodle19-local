@@ -12,7 +12,7 @@ class batch_view_restart_courses extends batch_view_base {
 
             $category = (int) $data['category'];
             $roleassignments = $data['roleassignments'];
-            $delete_groups = !empty($data['delete_groups']);
+            $groups = !empty($data['groups']);
 
             if ($match and checkdate($startmonth, $startday, $startyear)) {
                 foreach ($data as $name => $value) {
@@ -24,7 +24,7 @@ class batch_view_restart_courses extends batch_view_base {
                             'startday' => $startday,
                             'category' => $category,
                             'roleassignments' =>  $roleassignments,
-                            'delete_groups' => $delete_groups,
+                            'groups' => $groups,
                         );
                         batch_queue::add_job('restart_course', (object) $params);
                     }

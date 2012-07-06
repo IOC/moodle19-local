@@ -16,7 +16,6 @@ $string['column_state'] = 'Estat';
 $string['courses'] = 'Cursos';
 $string['delete'] = 'Suprimeix';
 $string['delete_all_role_assignments'] = 'Suprimeix totes les assignacions de rols';
-$string['delete_groups'] = 'Suprimeix els grups';
 $string['filter_all'] = 'Totes';
 $string['filter_archived'] = 'Arxivades';
 $string['filter_errors'] = 'Errors';

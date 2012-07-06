@@ -58,26 +58,18 @@ class batch_course {
         return "$backup_dir/$backup_name";
     }
 
-    function clean_group($groupid, $users) {
-        $members = get_records('groups_members', 'groupid',
-                               $groupid, '', 'id, userid');
+    function clean_groups($courseid) {
+        global $CFG;
+
+        $select = "groupid IN (SELECT id FROM {$CFG->prefix}groups WHERE courseid=$courseid)";
+        $members = get_records_select('groups_members', $select);
         if ($members) {
+            $context = get_context_instance(CONTEXT_COURSE, $courseid);
+            $users = get_users_by_capability($context, 'moodle/course:view', 'u.id');
             foreach ($members as $member) {
                 if (!isset($users[$member->userid])) {
                     delete_records('groups_members', 'id', $member->id);
                 }
-            }
-        }
-    }
-
-    function clean_groups($courseid) {
-        $context = get_context_instance(CONTEXT_COURSE, $courseid);
-        $users = get_users_by_capability($context, 'moodle/course:view',
-                                         'u.id');
-        $groups = get_records('groups', 'courseid', $courseid, '', 'id');
-        if ($groups) {
-            foreach ($groups as $group) {
-                self::clean_group($group->id, $users);
             }
         }
     }
@@ -93,13 +85,13 @@ class batch_course {
     }
 
     function delete_groups($courseid) {
-        $groups = get_records('groups', 'courseid', $courseid);
-        if ($groups) {
-            foreach ($groups as $group) {
-                delete_records('groups_members', 'groupid', $group->id);
-                delete_records('groups', 'id', $group->id);
-            }
-        }
+        global $DB;
+
+        $select = "groupid IN (SELECT id FROM {$CFG->prefix}groups WHERE courseid=$courseid)";
+        delete_records_select('groups_members', $select);
+        delete_records_select('groupings_groups', $select);
+        delete_records('groups', 'courseid', $courseid);
+        delete_records('groupings', 'courseid', $courseid);
     }
 
     function hide_course($courseid) {
@@ -138,7 +130,7 @@ class batch_course {
         $restore->restoreto = 2;
         $restore->metacourse = 0;
         $restore->users = 1;
-        $restore->groups = 1;
+        $restore->groups = RESTORE_GROUPS_GROUPINGS;
         $restore->logs = 0;
         $restore->user_files = 0;
         $restore->course_files = 1;

@@ -15,8 +15,7 @@ class batch_type_restart_course extends batch_type_base {
         $old_shortname = $course->shortname . '~';
         $old_fullname = $course->fullname . strftime(' ~ %B %G');
 
-        if ($old_course = get_record('course', 'shortname',
-                                     addslashes($old_shortname))) {
+        if ($old_course = get_record('course', 'shortname', addslashes($old_shortname))) {
             throw new Exception("backup exists");
         }
 
@@ -48,11 +47,11 @@ class batch_type_restart_course extends batch_type_base {
             }
         }
 
-        if ($params->delete_groups) {
+        if (!$params->groups) {
             batch_course::delete_groups($courseid);
-        } else {
-            batch_course::clean_groups($courseid);
         }
+
+        batch_course::clean_groups($courseid);
 
         if ($params->category) {
             move_courses(array($course->id), $params->category);

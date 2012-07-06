@@ -148,6 +148,8 @@ class batch_queue {
 }
 
 function batch_cron() {
+    global $CFG;
+
     $jobs = batch_queue::get_jobs(batch_queue::FILTER_ABORTED);
     foreach ($jobs as $job) {
         mtrace("batch: job {$job->id} aborted");
@@ -156,24 +158,39 @@ function batch_cron() {
         $job->save();
     }
 
-    $jobs = batch_queue::get_jobs(batch_queue::FILTER_PENDING);
-    if ($jobs) {
-        $start_time = time();
-        foreach ($jobs as $job) {
-            if (time() - $start_time >= BATCH_CRON_TIME) {
-                return;
-            }
-            if ($job->can_start()) {
-                mtrace("batch: executing job {$job->id}... ", "");
-                flush();
-                $job->execute();
-                mtrace($job->error ? "ERROR" : "OK");
-                flush();
-            }
-        }
+    $start_hour = isset($CFG->local_batch_start_hour) ? (int) $CFG->local_batch_start_hour : 0;
+    $stop_hour = isset($CFG->local_batch_stop_hour) ? (int) $CFG->local_batch_stop_hour : 0;
+    $hour = getdate()['hours'];
+    if ($start_hour < $stop_hour) {
+        $execute = ($hour >= $start_hour and $hour < $stop_hour);
     } else {
+        $execute = ($hour >= $start_hour or $hour < $stop_hour);
+    }
+    if (!$execute) {
+        mtrace("batch: execution will start at $start_hour");
+        flush();
+        return;
+    }
+
+    $jobs = batch_queue::get_jobs(batch_queue::FILTER_PENDING);
+    if (!$jobs) {
         mtrace("batch: no pending jobs");
         flush();
+        return;
+    }
+
+    $start_time = time();
+    foreach ($jobs as $job) {
+        if (time() - $start_time >= BATCH_CRON_TIME) {
+            return;
+        }
+        if ($job->can_start()) {
+            mtrace("batch: executing job {$job->id}... ", "");
+            flush();
+            $job->execute();
+            mtrace($job->error ? "ERROR" : "OK");
+            flush();
+        }
     }
 }
 

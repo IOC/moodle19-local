@@ -1,6 +1,8 @@
 <?php
 
 $string['batch'] = 'Tasques per lots';
+$string['batch_start_hour'] = 'Hora d\'inici de les tasques per lots';
+$string['batch_stop_hour'] = 'Hora d\'aturada de les tasques per lots';
 $string['errorlog'] = 'Registre d\'errors';
 $string['errorlog_filter'] = 'Filtre';
 $string['errorlog_notfound'] = 'No s\'ha trobat el fitxer de registre d\'errors.';

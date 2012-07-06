@@ -55,6 +55,18 @@ if ($hassiteconfig) {
                                        '', '0', $hosts)
     );
 
+    $settings->add(
+        new admin_setting_configselect('local_batch_start_hour',
+                                       get_string('batch_start_hour', 'local'), '',
+                                       '0', range(0, 23))
+    );
+
+    $settings->add(
+        new admin_setting_configselect('local_batch_stop_hour',
+                                       get_string('batch_stop_hour', 'local'), '',
+                                       '0', range(0, 23))
+    );
+
     $ADMIN->add('local', $settings);
 
     $pages = array('batch', 'errorlog', 'profiling');

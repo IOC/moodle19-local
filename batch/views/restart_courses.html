@@ -27,17 +27,20 @@
           </label>
           <?php $this->web->print_category_menu('category'); ?>
         </li>
+	<li>
+	  <label for="roleassignments">
+	    <?php echo get_string('roleassignments', 'role'); ?>:
+	  </label>
+	  <select id="roleassignments" name="roleassignments">
+	    <option value="all"><?php echo batch_string('all'); ?></option>
+	    <option value="teachers" selected="selected"><?php echo batch_string('teachers'); ?></option>
+	    <option value="none"><?php echo batch_string('none'); ?></option>
+	  </select>
+	</li>
         <li>
           <input type="checkbox" id="delete_groups" name="delete_groups"/>
           <label for="delete_groups">
             <?php echo batch_string('delete_groups'); ?>
-          </label>
-        </li>
-        <li>
-          <input type="checkbox" id="delete_all_role_assignments"
-                 name="delete_all_role_assignments"/>
-          <label for="delete_all_role_assignments">
-            <?php echo batch_string('delete_all_role_assignments'); ?>
           </label>
         </li>
       </ul>

@@ -30,9 +30,22 @@ class batch_type_restart_course extends batch_type_base {
                                                  $params->startmonth,
                                                  $params->startday);
 
-        if ($params->delete_all_role_assignments) {
-            $context = get_context_instance(CONTEXT_COURSE, $courseid);
+        $context = get_context_instance(CONTEXT_COURSE, $courseid);
+        if ($params->roleassignments == 'none') {
             delete_records('role_assignments', 'contextid', $context->id);
+        } else if ($params->roleassignments == 'teachers') {
+            $roleids = array();
+            $capabilities = array('moodle/legacy:editingteacher', 'moodle/legacy:teacher');
+            foreach ($capabilities as $cap) {
+                foreach (get_roles_with_capability($cap, CAP_ALLOW) as $role) {
+                    $roleids[] = $role->id;
+                }
+            }
+            if ($roleids) {
+                $select = ('contextid = ' . $context->id .' AND ' .
+                           'roleid NOT IN (' . implode(',', $roleids) . ')');
+                delete_records_select('role_assignments', $select);
+            }
         }
 
         if ($params->delete_groups) {

@@ -24,30 +24,20 @@ class batch_course {
         $backup_name = backup_get_zipfile_name($course);
         $preferences->backup_destination = $CFG->dataroot . '/' . $backup_dir;
         $preferences->backup_name = $backup_name;
-
-        $preferences->backuproleassignments = array();
-        $capabilities = array('moodle/legacy:editingteacher',
-                              'moodle/legacy:teacher');
-        foreach ($capabilities as $cap) {
-            foreach (get_roles_with_capability($cap, CAP_ALLOW) as $role) {
-                $preferences->backuproleassignments[$role->id] = $role;
-            }
-        }
+        $preferences->backuproleassignments = get_records('role');
 
         if ($allmods = get_records("modules") ) {
             foreach ($allmods as $mod) {
-                $modvar = $mod->name . '_instances';
+                $modvar = "{$mod->name}_instances";
                 if (isset($preferences->$modvar)) {
-                    foreach ($preferences->$modvar as $instance) {
-                        $var = 'backup_user_info_' . $mod->name
-                            . '_instance_'. $instance->id;
-                        $preferences->$var = false;
-                        $preferences->mods[$mod->name]
-                            ->instances[$instance->id]->userinfo = false;
-                    }
-                    $var = "backup_user_info_" . $mod->name;
+                    $var = "backup_user_info_{$mod->name}";
                     $preferences->$var = false;
                     $preferences->mods[$mod->name]->userinfo = false;
+                    foreach ($preferences->$modvar as $instance) {
+                        $var = "backup_user_info_{$mod->name}_instance_{$instance->id}";
+                        $preferences->$var = false;
+                        $preferences->mods[$mod->name]->instances[$instance->id]->userinfo = false;
+                    }
                 }
             }
         }

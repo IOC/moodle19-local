@@ -160,7 +160,8 @@ function batch_cron() {
 
     $start_hour = isset($CFG->local_batch_start_hour) ? (int) $CFG->local_batch_start_hour : 0;
     $stop_hour = isset($CFG->local_batch_stop_hour) ? (int) $CFG->local_batch_stop_hour : 0;
-    $hour = getdate()['hours'];
+    $data = getdate();
+    $hour = $date['hours'];
     if ($start_hour < $stop_hour) {
         $execute = ($hour >= $start_hour and $hour < $stop_hour);
     } else {

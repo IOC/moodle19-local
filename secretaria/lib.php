@@ -199,6 +199,23 @@ class local_secretaria_service {
 
     /* Misc */
 
+    private $send_mail_parameters = array(
+        'message' => array(
+            'type' => 'dict',
+            'required' => array(
+                'sender' => array('type' => 'username'),
+                'course' => array('type' => 'text'),
+                'subject' => array('type' => 'text'),
+                'content' => array('type' => 'raw'),
+                'to' => array('type' => 'list', 'of' => array('type' => 'username')),
+            ),
+            'optional' => array(
+                'cc' => array('type' => 'list', 'of' => array('type' => 'username')),
+                'bcc' => array('type' => 'list', 'of' => array('type' => 'username')),
+            ),
+        ),
+    );
+
     private $has_course_parameters = array(
         'course' => array('type' => 'text'),
     );
@@ -397,6 +414,54 @@ class local_secretaria_moodle_19 implements local_secretaria_moodle {
         if ($this->transaction) {
             rollback_sql();
             $this->transaction = false;
+        }
+    }
+
+    function send_mail($sender, $courseid, $subject, $content, $to, $cc, $bcc) {
+        global $CFG;
+
+        require_once($CFG->dirroot . '/blocks/email_list/email/lib.php');
+
+        $mail = new stdClass;
+        $mail->userid = $sender;
+        $mail->course = $courseid;
+        $mail->subject = $subject;
+        $mail->body = $content;
+        $mail->timecreated = time();
+        $mail->respondedid = 0;
+        $mailid = insert_record('block_email_list_mail', $mail);
+
+        $foldermail = new stdClass;
+        $foldermail->mailid = $mailid;
+        $folder = email_get_root_folder($sender, EMAIL_SENDBOX);
+        $foldermail->folderid = $folder->id;
+        insert_record('block_email_list_foldermail', $foldermail);
+
+        $send = new stdClass;
+        $send->course = $courseid;
+        $send->mailid = $mailid;
+        $send->readed = 0;
+        $send->sended = 1;
+        $send->answered = 0;
+
+        foreach (array_merge($to, $cc, $bcc) as $userid) {
+            email_create_parents_folders($userid);
+
+            $send->userid = $userid;
+            if (in_array($userid, $to)) {
+                $send->type = 'to';
+            } else if (in_array($userid, $cc)) {
+                $send->type = 'cc';
+            } else if (in_array($userid, $bcc)) {
+                $send->type = 'bcc';
+            }
+            insert_record('block_email_list_send', $send);
+
+            $foldermail = new stdClass;
+            $foldermail->mailid = $mailid;
+            $folder = email_get_root_folder($userid, EMAIL_INBOX);
+            $foldermail->folderid = $folder->id;
+            insert_record('block_email_list_foldermail', $foldermail);
         }
     }
 

@@ -27,3 +27,4 @@ $string['myremotecourses'] = 'My courses from $a';
 $string['myremotenocourses'] = 'No remote courses found';
 $string['myremotetimeout'] = 'Error while getting remote courses.';
 $string['myremotehost'] = 'My Moodle remote host';
+$string['myremotemessage'] = 'Message to users with remote courses';

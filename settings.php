@@ -56,6 +56,11 @@ if ($hassiteconfig) {
     );
 
     $settings->add(
+        new admin_setting_configtextarea('local_myremote_message',
+                                        get_string('myremotemessage', 'local'), '', '')
+    );
+
+    $settings->add(
         new admin_setting_configselect('local_batch_start_hour',
                                        get_string('batch_start_hour', 'local'), '',
                                        '0', range(0, 23))

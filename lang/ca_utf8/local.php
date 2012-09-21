@@ -35,3 +35,4 @@ $string['myremotecourses'] = 'Els meus cursos de $a';
 $string['myremotenocourses'] = 'No s\'ha trobat cap curs';
 $string['myremotetimeout'] = 'S\'ha produït un error en recuperar els cursos remots.';
 $string['myremotehost'] = 'Servidor remot del meu Moodle';
+$string['myremotemessage'] = 'Missatge per als usuaris amb cursos remots';

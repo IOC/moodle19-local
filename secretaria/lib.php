@@ -50,7 +50,9 @@ class local_secretaria_service {
         case 'text':
             return is_string($value) and $value === clean_param($value, PARAM_TEXT);
         case 'int':
-            return is_string($value) and $value === (string) clean_param($value, PARAM_INT);
+            return is_int($value) or is_string($value) and $value === (string) (int) $value;
+        case 'bool':
+            return is_bool($value) or $value === 0 or $value === 1 or $value === '0' or $aalue === '1';
         case 'username':
             return is_string($value) and preg_match('/^[a-z0-9\.-]*$/', $value);
         case 'email':

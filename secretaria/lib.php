@@ -367,8 +367,7 @@ class local_secretaria_moodle_19 implements local_secretaria_moodle {
 
     function delete_role_assignment($courseid, $userid, $roleid) {
         $context = get_context_instance(CONTEXT_COURSE, $courseid);
-        delete_records('role_assignments', 'contextid', $context->id,
-                       'userid', $userid, 'roleid', $roleid);
+        role_unassign($roleid, $userid, 0, $context->id);
     }
 
     function get_course_id($shortname) {
@@ -488,7 +487,11 @@ class local_secretaria_moodle_19 implements local_secretaria_moodle {
     }
 
     function groups_add_member($groupid, $userid) {
-        return groups_add_member($groupid, $userid);
+        $courseid = get_field('groups', 'courseid', 'id', $groupid);
+        $context = get_context_instance(CONTEXT_COURSE, $courseid);
+        if (has_capability('moodle/course:view', $context, $userid)) {
+            groups_add_member($groupid, $userid);
+        }
     }
 
     function groups_create_group($courseid, $name, $description) {
@@ -511,14 +514,7 @@ class local_secretaria_moodle_19 implements local_secretaria_moodle {
 
     function insert_role_assignment($courseid, $userid, $roleid) {
         $context = get_context_instance(CONTEXT_COURSE, $courseid);
-        $record = (object) array(
-            'contextid' => $context->id,
-            'userid' => $userid,
-            'roleid' => $roleid,
-            'enrol' => 'manual',
-            'timemodified' => time(),
-        );
-        insert_record('role_assignments', addslashes_recursive($record));
+        role_assign($roleid, $userid, 0, $context->id);
     }
 
     function make_timestamp($year, $month, $day, $hour=0, $minute=0, $second=0) {

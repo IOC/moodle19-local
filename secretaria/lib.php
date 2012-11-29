@@ -86,6 +86,10 @@ class local_secretaria_service {
         'username' => array('type' => 'username'),
     );
 
+    private $get_user_lastaccess_parameters = array(
+        'username' => array('type' => 'username'),
+    );
+
     private $create_user_parameters = array(
         'properties' => array(
             'type' => 'dict',
@@ -453,6 +457,17 @@ class local_secretaria_moodle_19 implements local_secretaria_moodle {
         $select = sprintf("username = '%s' AND mnethostid = %d AND deleted = 0",
                           addslashes($username), $mnethostid);
         return get_field_select('user', 'id', $select);
+    }
+
+    function get_user_lastaccess($userid) {
+        global $CFG;
+
+        $sql = sprintf("SELECT l.id, c.shortname AS course, l.timeaccess AS time " .
+                       "FROM {$CFG->prefix}user_lastaccess l " .
+                       "JOIN {$CFG->prefix}course c ON c.id = l.courseid " .
+                       "WHERE l.userid = %d", $userid);
+
+        return get_records_sql($sql);
     }
 
     function get_user_record($mnethostid, $username) {

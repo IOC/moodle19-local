@@ -194,6 +194,11 @@ class local_secretaria_service {
         'users' => array('type' => 'list', 'of' => array('type' => 'username')),
     );
 
+    private $get_user_groups_parameters = array(
+        'user' => array('type' => 'username'),
+        'course' => array('type' => 'text'),
+    );
+
     /* Grades */
 
     private $get_course_grades_parameters = array(
@@ -396,10 +401,6 @@ class local_secretaria_moodle_19 implements local_secretaria_moodle {
         return get_records_sql($sql);
     }
 
-    function get_groups($courseid) {
-        return get_records('groups', 'courseid', $courseid);
-    }
-
     function get_role_assignments_by_course($courseid, $mnethostid) {
         global $CFG;
         $context = get_context_instance(CONTEXT_COURSE, $courseid);
@@ -521,6 +522,10 @@ class local_secretaria_moodle_19 implements local_secretaria_moodle {
 
     function groups_delete_group($groupid) {
         groups_delete_group($groupid);
+    }
+
+    function groups_get_all_groups($courseid, $userid=0) {
+        return groups_get_all_groups($courseid, $userid);
     }
 
     function groups_remove_member($groupid, $userid) {

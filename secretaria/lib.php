@@ -346,13 +346,12 @@ class local_secretaria_moodle_19 implements local_secretaria_moodle {
         rebuild_course_cache($course->id);
     }
 
-    function create_user($auth, $mnethostid, $username, $password,
-                         $firstname, $lastname, $email) {
+    function create_user($auth, $username, $password, $firstname, $lastname, $email) {
         global $CFG;
 
         $record = new object;
         $record->auth = $auth;
-        $record->mnethostid = $mnethostid;
+        $record->mnethostid = $CFG->mnet_localhost_id;
         $record->username = $username;
         if ($password) {
             $record->password = hash_internal_user_password($password);
@@ -391,17 +390,17 @@ class local_secretaria_moodle_19 implements local_secretaria_moodle {
         return get_field('groups', 'id', 'courseid', $courseid, 'name', addslashes($name));
     }
 
-    function get_group_members($groupid, $mnethostid) {
+    function get_group_members($groupid) {
         global $CFG;
         $sql = sprintf("SELECT DISTINCT u.id, u.username " .
                        "FROM {$CFG->prefix}groups_members gm " .
                        "JOIN {$CFG->prefix}user u ON u.id = gm.userid " .
                        "WHERE gm.groupid = %d AND u.mnethostid = %d AND u.deleted = 0",
-                       $groupid, $mnethostid);
+                       $groupid, $CFG->mnet_localhost_id);
         return get_records_sql($sql);
     }
 
-    function get_role_assignments_by_course($courseid, $mnethostid) {
+    function get_role_assignments_by_course($courseid) {
         global $CFG;
         $context = get_context_instance(CONTEXT_COURSE, $courseid);
         $sql = sprintf("SELECT ra.id, u.username AS user, r.shortname AS role " .
@@ -409,7 +408,7 @@ class local_secretaria_moodle_19 implements local_secretaria_moodle {
                        "JOIN {$CFG->prefix}user u ON u.id = ra.userid " .
                        "JOIN {$CFG->prefix}role r ON r.id = ra.roleid " .
                        "WHERE ra.contextid = %d AND u.mnethostid = %d AND u.deleted = 0",
-                       $context->id, $mnethostid);
+                       $context->id, $CFG->mnet_localhost_id);
         return get_records_sql($sql);
     }
 
@@ -454,9 +453,10 @@ class local_secretaria_moodle_19 implements local_secretaria_moodle {
         return get_records_sql($sql);
     }
 
-    function get_user_id($mnethostid, $username) {
+    function get_user_id($username) {
+        global $CFG;
         $select = sprintf("username = '%s' AND mnethostid = %d AND deleted = 0",
-                          addslashes($username), $mnethostid);
+                          addslashes($username), $CFG->mnet_localhost_id);
         return get_field_select('user', 'id', $select);
     }
 
@@ -471,9 +471,10 @@ class local_secretaria_moodle_19 implements local_secretaria_moodle {
         return get_records_sql($sql);
     }
 
-    function get_user_record($mnethostid, $username) {
+    function get_user_record($username) {
+        global $CFG;
         $select = sprintf("mnethostid = %d AND username = '%s' AND deleted = 0",
-                          $mnethostid, addslashes($username));
+                          $CFG->mnet_localhost_id, addslashes($username));
         return get_record_select('user', $select);
     }
 
@@ -539,15 +540,6 @@ class local_secretaria_moodle_19 implements local_secretaria_moodle {
 
     function make_timestamp($year, $month, $day, $hour=0, $minute=0, $second=0) {
         return make_timestamp($year, $month, $day, $hour, $minute, $second);
-    }
-
-    function mnet_host_id() {
-        return $this->mnet_localhost_id();
-    }
-
-    function mnet_localhost_id() {
-        global $CFG;
-        return (int) $CFG->mnet_localhost_id;
     }
 
     function role_assignment_exists($courseid, $userid, $roleid) {

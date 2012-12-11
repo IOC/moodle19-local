@@ -95,10 +95,12 @@ class local_secretaria_service {
             'type' => 'dict',
             'required' => array(
                 'username' => array('type' => 'username'),
-                'password' => array('type' => 'raw'),
                 'firstname' => array('type' => 'notags'),
                 'lastname' => array('type' => 'notags'),
                 'email' => array('type' => 'email'),
+            ),
+            'optional' => array(
+                'password' => array('type' => 'raw'),
             ),
         ),
     );
@@ -285,8 +287,13 @@ class local_secretaria_moodle_19 implements local_secretaria_moodle {
 
     private $transaction = false;
 
+    function auth_plugin() {
+        global $CFG;
+        return isset($CFG->local_secretaria_auth) ? $CFG->local_secretaria_auth : 'manual';
+    }
+
     function check_password($password) {
-        return check_password_policy($password);
+        return $password and check_password_policy($password);
     }
 
     function commit_transaction() {
@@ -353,11 +360,7 @@ class local_secretaria_moodle_19 implements local_secretaria_moodle {
         $record->auth = $auth;
         $record->mnethostid = $CFG->mnet_localhost_id;
         $record->username = $username;
-        if ($password) {
-            $record->password = hash_internal_user_password($password);
-        } else {
-            $record->password = 'not cached';
-        }
+        $record->password = $password ? hash_internal_user_password($password) : 'not cached';
         $record->firstname = $firstname;
         $record->lastname = $lastname;
         $record->email = $email;
@@ -540,6 +543,10 @@ class local_secretaria_moodle_19 implements local_secretaria_moodle {
 
     function make_timestamp($year, $month, $day, $hour=0, $minute=0, $second=0) {
         return make_timestamp($year, $month, $day, $hour, $minute, $second);
+    }
+
+    function prevent_local_passwords($auth) {
+        return get_auth_plugin($auth)->prevent_local_passwords();
     }
 
     function role_assignment_exists($courseid, $userid, $roleid) {

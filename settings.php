@@ -66,6 +66,14 @@ if ($hassiteconfig) {
                                        '0', range(0, 23))
     );
 
+    $auth_plugins = get_enabled_auth_plugins(true);
+    $options = array_combine($auth_plugins, $auth_plugins);
+    $settings->add(
+        new admin_setting_configselect('local_secretaria_auth',
+                                       get_string('secretaria_auth_plugin', 'local'), '',
+                                       'manual', $options)
+    );
+
     $ADMIN->add('local', $settings);
 
     $pages = array('batch', 'errorlog', 'profiling');

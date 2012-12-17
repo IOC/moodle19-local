@@ -386,7 +386,7 @@ class local_secretaria_moodle_19 implements local_secretaria_moodle {
     }
 
     function get_courses() {
-        return get_records('course', 'id != '. SITEID, '', 'id, shortname');
+        return get_records_select('course', 'id <> '. SITEID, '', 'id, shortname');
     }
 
     function get_group_id($courseid, $name) {

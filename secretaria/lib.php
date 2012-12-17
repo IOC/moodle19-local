@@ -87,7 +87,7 @@ class local_secretaria_service {
     );
 
     private $get_user_lastaccess_parameters = array(
-        'username' => array('type' => 'username'),
+        'users' => array('type' => 'list', 'of' => array('type' => 'username')),
     );
 
     private $create_user_parameters = array(
@@ -463,15 +463,13 @@ class local_secretaria_moodle_19 implements local_secretaria_moodle {
         return get_field_select('user', 'id', $select);
     }
 
-    function get_user_lastaccess($userid) {
+    function get_user_lastaccess($userids) {
         global $CFG;
-
-        $sql = sprintf("SELECT l.id, c.shortname AS course, l.timeaccess AS time " .
+        $sql = sprintf("SELECT l.id, l.userid, c.shortname AS course, l.timeaccess AS time " .
                        "FROM {$CFG->prefix}user_lastaccess l " .
                        "JOIN {$CFG->prefix}course c ON c.id = l.courseid " .
-                       "WHERE l.userid = %d", $userid);
-
-        return get_records_sql($sql);
+                       "WHERE l.userid IN (%s)", implode(',', $userids));
+        return $userids ? get_records_sql($sql) : false;
     }
 
     function get_user_record($username) {

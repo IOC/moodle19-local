@@ -215,7 +215,7 @@ class local_secretaria_service {
 
     /* Surveys */
 
-    private $get_survey_templates_parameters = array(
+    private $get_surveys_parameters = array(
         'course' => array('type' => 'text'),
     );
 
@@ -443,16 +443,16 @@ class local_secretaria_moodle_19 implements local_secretaria_moodle {
         return get_field_sql($sql);
     }
 
-    function get_survey_templates($courseid) {
+    function get_surveys($courseid) {
         global $CFG;
-        $sql = sprintf("SELECT q.id, q.name, cm.idnumber " .
+        $sql = sprintf("SELECT q.id, q.name, cm.idnumber, qs.realm " .
                        "FROM {$CFG->prefix}modules m " .
                        "JOIN {$CFG->prefix}course_modules cm ON cm.module = m.id " .
                        "JOIN {$CFG->prefix}questionnaire q ON q.id = cm.instance " .
                        "JOIN {$CFG->prefix}questionnaire_survey qs ON qs.id = q.sid " .
                        "WHERE m.name = 'questionnaire' AND cm.course = %d " .
-                       "AND qs.realm = 'template' AND qs.status != 4",
-                       $courseid);
+                       "AND qs.owner = %d AND qs.status != 4",
+                       $courseid, $courseid);
         return get_records_sql($sql);
     }
 

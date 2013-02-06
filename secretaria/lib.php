@@ -367,6 +367,9 @@ class local_secretaria_moodle_19 implements local_secretaria_moodle {
         $record->deleted = 0;
         $record->confirmed = 1;
         $record->lang = $CFG->lang;
+        $record->maildisplay = 0;
+        $record->autosubscribe = 0;
+        $record->trackforums = 1;
         $record->timemodified = time();
 
         insert_record('user', $record);

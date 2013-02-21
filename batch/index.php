@@ -7,12 +7,9 @@ $views = array('job_queue',
                'create_courses',
                'delete_courses',
                'restart_courses',
+               'export_courses',
                'db_maint');
 
 $view = optional_param('view', 'job_queue', PARAM_ALPHAEXT);
 
 new batch_web($views, $view);
-
-
-
-

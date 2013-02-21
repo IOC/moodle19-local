@@ -8,7 +8,7 @@ class batch_type_delete_course extends batch_type_base {
     }
 
     function params_info($params) {
-        return batch_string('params_delete_course', $params);
+        return get_string('course') . ': ' . $params->shortname;
     }
 
 }

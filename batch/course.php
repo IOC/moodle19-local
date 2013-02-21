@@ -2,29 +2,29 @@
 
 class batch_course {
 
-    function backup_course($courseid) {
+    function backup_course($course, $backup_dir, $export=false, $materials=false) {
         global $CFG, $preferences;
 
-        if (!$course = get_record('course', 'id', $courseid)) {
-            throw new Exception("backup_course: nonexistent course $courseid");
+        if (!make_upload_directory($backup_dir)) {
+            throw new Exception("backup_course: could not create directory $backup_dir");
         }
 
         $prefs = array('backup_metacourse' => 0,
-                       'backup_users' => 1,
+                       'backup_users' => $export ? 2 : 1,
                        'backup_logs' => 0,
                        'backup_user_files' => 0,
                        'backup_course_files' => 1,
                        'backup_site_files' => 0,
                        'backup_messages' => 0);
 
-        $preferences = backup_generate_preferences_artificially($course,
-                                                                $prefs);
+        $preferences = backup_generate_preferences_artificially($course, $prefs);
 
-        $backup_dir = SITEID . '/backupdata';
         $backup_name = backup_get_zipfile_name($course);
         $preferences->backup_destination = $CFG->dataroot . '/' . $backup_dir;
         $preferences->backup_name = $backup_name;
         $preferences->backuproleassignments = get_records('role');
+        $preferences->export = $export;
+        $preferences->materials = $materials;
 
         if ($allmods = get_records("modules") ) {
             foreach ($allmods as $mod) {
@@ -37,6 +37,12 @@ class batch_course {
                         $var = "backup_user_info_{$mod->name}_instance_{$instance->id}";
                         $preferences->$var = false;
                         $preferences->mods[$mod->name]->instances[$instance->id]->userinfo = false;
+                        if ($export and $mod->name == 'assignment' and
+                            $instance->assignmenttype == 'peerreview') {
+                            $var = "backup_{$mod->name}_instance_{$instance->id}";
+                            $preferences->$var = false;
+                            $preferences->mods[$mod->name]->instances[$instance->id]->backup = false;
+                        }
                     }
                 }
             }
@@ -55,7 +61,7 @@ class batch_course {
             throw new Exception('backup_course: ' . $errorstr);
         }
 
-        return "$backup_dir/$backup_name";
+        return $backup_dir . '/' . $backup_name;
     }
 
     function clean_groups($courseid) {

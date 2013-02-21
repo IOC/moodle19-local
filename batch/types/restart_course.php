@@ -19,7 +19,7 @@ class batch_type_restart_course extends batch_type_base {
             throw new Exception("backup exists");
         }
 
-        $backup_path = batch_course::backup_course($course->id);
+        $backup_path = batch_course::backup_course($course, SITEID.'/backupdata');
 
         batch_course::hide_course($course->id);
         batch_course::rename_course($course->id, $old_shortname, $old_fullname);
@@ -59,7 +59,9 @@ class batch_type_restart_course extends batch_type_base {
     }
 
     function params_info($params) {
-        return batch_string('params_restart_course', $params);
+        $date_info = "{$params->startday}/{$params->startmonth}/{$params->startyear}";
+        return (get_string('course') . ": {$params->shortname}<br/>" .
+                get_string('date') . ": $date_info");
     }
 
 }

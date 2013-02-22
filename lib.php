@@ -101,6 +101,28 @@ function local_login($userid, $password, $urltogo) {
         print_footer();
         die;
     }
+
+    if (!empty($CFG->local_redirect_url) and !empty($CFG->local_redirect_courses)
+        and preg_match("#^{$CFG->wwwroot}(/?|/index\.php|/my/?|/my/index.php)$#", $urltogo)) {
+        $shortnames = array();
+        foreach (explode("\n", $CFG->local_redirect_courses) as $shortname) {
+            if (trim($shortname)) {
+                $shortnames[] = "'" . addslashes(trim($shortname)) . "'";
+            }
+        }
+        if ($shortnames) {
+            $sql = "SELECT ra.id"
+                . " FROM {$CFG->prefix}course c"
+                . " JOIN {$CFG->prefix}context ct ON ct.instanceid = c.id"
+                . " JOIN {$CFG->prefix}role_assignments ra ON ra.contextid = ct.id"
+                . " WHERE c.shortname IN (" . implode(',', $shortnames) . ")"
+                . " AND ct.contextlevel = " . CONTEXT_COURSE
+                . " AND ra.userid = $userid";
+            if (record_exists_sql($sql)) {
+                redirect($CFG->local_redirect_url);
+            }
+        }
+    }
 }
 
 function local_raise_resource_limits() {

@@ -8,7 +8,6 @@ class batch_view_job_queue extends batch_view_base {
             batch_queue::FILTER_PENDING => batch_string('filter_pending'),
             batch_queue::FILTER_FINISHED => batch_string('filter_finished'),
             batch_queue::FILTER_ERRORS => batch_string('filter_errors'),
-            batch_queue::FILTER_ARCHIVED => batch_string('filter_archived'),
         );
         choose_from_menu($options, 'filter', $filter, '');
     }

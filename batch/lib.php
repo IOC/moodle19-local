@@ -10,7 +10,7 @@ require_once($CFG->dirroot . '/backup/restorelib.php');
 require_once($CFG->dirroot . '/lib/ddllib.php');
 
 define('BATCH_CRON_TIME', 600);
-define('BATCH_ARCHIVE_AGE', 90 * 86400);
+define('BATCH_JOB_AGE', 90 * 86400);
 
 class batch_job {
     var $id;
@@ -74,7 +74,6 @@ class batch_queue {
     const FILTER_FINISHED = 2;
     const FILTER_ERRORS = 3;
     const FILTER_ABORTED = 4;
-    const FILTER_ARCHIVED = 5;
 
     function add_job($type, $params=false) {
         $record = (object) array('type' => $type,
@@ -101,19 +100,22 @@ class batch_queue {
                                     self::filter_select($filter));
     }
 
+    function delete_old_jobs() {
+        $select = 'timecreated < ' . (time() - BATCH_JOB_AGE);
+        delete_records_select('local_batch_job', $select);
+    }
+
     function filter_select($filter) {
-        $time_archived = time() - BATCH_ARCHIVE_AGE;
-        $select = "timecreated > $time_archived";
         if ($filter == self::FILTER_PENDING) {
-            $select .= " AND timeended = 0";
+            $select = "timeended = 0";
         } elseif ($filter == self::FILTER_FINISHED) {
-            $select .= " AND timeended > 0 AND error = ''";
+            $select = "timeended > 0 AND error = ''";
         } elseif ($filter == self::FILTER_ERRORS) {
-            $select .= " AND timeended > 0 AND error != ''";
+            $select = "timeended > 0 AND error != ''";
         } elseif ($filter == self::FILTER_ABORTED) {
-            $select .= " AND timestarted > 0 AND timeended = 0";
-        } elseif ($filter == self::FILTER_ARCHIVED) {
-            $select = "timecreated <= $time_archived";
+            $select = "timestarted > 0 AND timeended = 0";
+        } else {
+            $select = '';
         }
         return $select;
     }
@@ -149,6 +151,8 @@ class batch_queue {
 
 function batch_cron() {
     global $CFG;
+
+    batch_queue::delete_old_jobs();
 
     $jobs = batch_queue::get_jobs(batch_queue::FILTER_ABORTED);
     foreach ($jobs as $job) {

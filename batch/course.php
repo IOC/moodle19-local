@@ -26,7 +26,7 @@ class batch_course {
         $preferences->export = $export;
         $preferences->materials = $materials;
 
-        if ($allmods = get_records("modules") ) {
+        if ($allmods = get_records("modules")) {
             foreach ($allmods as $mod) {
                 $modvar = "{$mod->name}_instances";
                 if (isset($preferences->$modvar)) {
@@ -37,8 +37,12 @@ class batch_course {
                         $var = "backup_user_info_{$mod->name}_instance_{$instance->id}";
                         $preferences->$var = false;
                         $preferences->mods[$mod->name]->instances[$instance->id]->userinfo = false;
-                        if ($export and $mod->name == 'assignment' and
-                            $instance->assignmenttype == 'peerreview') {
+                        if ($export and
+                            (($mod->name == 'assignment' and
+                              $instance->assignmenttype == 'peerreview') or
+                             ($mod->name == 'resource' and
+                              $instance->type == 'directory' and
+                              preg_match('#^($|__materials__/)#', $instance->reference)))) {
                             $var = "backup_{$mod->name}_instance_{$instance->id}";
                             $preferences->$var = false;
                             $preferences->mods[$mod->name]->instances[$instance->id]->backup = false;

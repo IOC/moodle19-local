@@ -77,6 +77,12 @@ if ($hassiteconfig) {
                                        '0', range(0, 23))
     );
 
+    $settings->add(
+        new admin_setting_configtext('local_batch_export_dir',
+                                       get_string('batch_export_dir', 'local'),
+                                       '', '', PARAM_PATH, 50)
+    );
+
     $auth_plugins = get_enabled_auth_plugins(true);
     $options = array_combine($auth_plugins, $auth_plugins);
     $settings->add(

@@ -1,6 +1,9 @@
 <?php
 
 $string['batch'] = 'Batch jobs';
+$string['batch_start_hour'] = 'Start hour of batch jobs';
+$string['batch_stop_hour'] = 'Stop hour of batch jobs';
+$string['batch_export_dir'] = 'Export directory of batch jobs';
 $string['errorlog'] = 'Error log';
 $string['errorlog_filter'] = 'Filter';
 $string['errorlog_notfound'] = 'Error log file not found.';

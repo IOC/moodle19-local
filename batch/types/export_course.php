@@ -26,7 +26,13 @@ class batch_type_export_course extends batch_type_base {
             }
         }
 
-        batch_course::backup_course($course, SITEID.'/backupdata/export', true, $materials);
+        if (!empty($CFG->local_batch_export_dir)) {
+            $backupdir = $CFG->local_batch_export_dir;
+        } else {
+            $backupdir = SITEID . '/backupdata';
+        }
+
+        batch_course::backup_course($course, $backupdir, true, $materials);
     }
 
     function params_info($params) {

@@ -1,0 +1,47 @@
+<?php $this->web->print_header(); ;?>
+
+<div>
+  <form method="post"
+        action="<?php echo $this->web->url('config_courses')->out(); ?>">
+    <input type="hidden" name="sesskey" id="sesskey"
+           value="<?php echo sesskey(); ?>" />
+    <div class="section">
+      <h3><?php echo batch_string('courses'); ?></h3>
+      <div id="course-tree">
+	<?php $this->web->print_courses_tree(); ?>
+      </div>
+    </div>
+    <div class="section">
+      <h3><?php echo batch_string('parameters'); ?></h3>
+      <ul class="params">
+        <li>
+          <label for="suffix">
+            <?php echo batch_string('suffix'); ?>:
+          </label>
+          <select id="suffix" name="suffix">
+            <option value=""></option>
+            <option value="none"><?php echo batch_string('suffix_none'); ?></option>
+            <option value="restarted"><?php echo batch_string('suffix_restarted'); ?></option>
+            <option value="imported"><?php echo batch_string('suffix_imported'); ?></option>
+          </select>
+        </li>
+        <li>
+          <label for="visible">
+            <?php echo get_string('visible'); ?>:
+          </label>
+          <select id="visible" name="visible">
+            <option value=""></option>
+            <option value="yes"><?php echo get_string('yes'); ?></option>
+            <option value="no"><?php echo get_string('no'); ?></option>
+          </select>
+        </li>
+      </ul>
+    </div>
+    <div class="section">
+      <input type="submit" name="config"
+	     value="<?php echo batch_string('configure'); ?>" />
+    </div>
+  </form>
+</div>
+
+<?php $this->web->print_footer(); ?>

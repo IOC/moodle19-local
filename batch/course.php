@@ -68,6 +68,31 @@ class batch_course {
         return $backup_dir . '/' . $backup_name;
     }
 
+    function change_suffix($courseid, $suffix) {
+        $course = get_record('course', 'id', $courseid);
+
+        if (preg_match('/^(.*)([~\*])$/', $course->shortname, $match)) {
+            $course->shortname = $match[1];
+            if ($match[2] == '~') {
+                if (preg_match('/(.*) ~ .*?$/', $course->fullname, $match)) {
+                    $course->fullname = $match[1];
+                }
+            }
+        }
+
+        if ($suffix == 'restarted') {
+            $course->shortname .= '~';
+            $course->fullname .= strftime(' ~ %B %G');
+        } elseif ($suffix == 'imported') {
+            $course->shortname .= '*';
+        }
+
+        $id = get_field('course', 'id', 'shortname', $course->shortname);
+        if (!$id or $id == $courseid) {
+            return update_record('course', $course);
+        }
+    }
+
     function clean_groups($courseid) {
         global $CFG;
 

@@ -102,23 +102,27 @@ function local_login($userid, $password, $urltogo) {
         die;
     }
 
-    if (!empty($CFG->local_redirect_url) and !empty($CFG->local_redirect_courses)
+    if (!empty($CFG->local_redirect_url) and !empty($CFG->local_redirect_include)
         and preg_match("#^{$CFG->wwwroot}(/?|/index\.php|/my/?|/my/index.php)$#", $urltogo)) {
         $shortnames = array();
-        foreach (explode("\n", $CFG->local_redirect_courses) as $shortname) {
-            if (trim($shortname)) {
-                $shortnames[] = "'" . addslashes(trim($shortname)) . "'";
+        $sql = "SELECT ra.id, c.shortname"
+            . " FROM {$CFG->prefix}course c"
+            . " JOIN {$CFG->prefix}context ct ON ct.instanceid = c.id"
+            . " JOIN {$CFG->prefix}role_assignments ra ON ra.contextid = ct.id"
+            . " WHERE ct.contextlevel = " . CONTEXT_COURSE
+            . " AND ra.userid = $userid";
+        if ($records = get_records_sql($sql)) {
+            foreach ($records as $record) {
+                $shortnames[] = $record->shortname;
             }
         }
-        if ($shortnames) {
-            $sql = "SELECT ra.id"
-                . " FROM {$CFG->prefix}course c"
-                . " JOIN {$CFG->prefix}context ct ON ct.instanceid = c.id"
-                . " JOIN {$CFG->prefix}role_assignments ra ON ra.contextid = ct.id"
-                . " WHERE c.shortname IN (" . implode(',', $shortnames) . ")"
-                . " AND ct.contextlevel = " . CONTEXT_COURSE
-                . " AND ra.userid = $userid";
-            if (record_exists_sql($sql)) {
+        foreach (explode("\n", $CFG->local_redirect_exclude) as $shortname) {
+            if (in_array(trim($shortname), $shortnames)) {
+                return;
+            }
+        }
+        foreach (explode("\n", $CFG->local_redirect_include) as $shortname) {
+            if (in_array(trim($shortname), $shortnames)) {
                 redirect($CFG->local_redirect_url);
             }
         }

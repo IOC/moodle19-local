@@ -37,4 +37,5 @@ $string['myremotetimeout'] = 'S\'ha produït un error en recuperar els cursos re
 $string['myremotehost'] = 'Servidor remot del meu Moodle';
 $string['myremotemessage'] = 'Missatge per als usuaris amb cursos remots';
 $string['redirect_url'] = 'URL on redirigir els usuaris';
-$string['redirect_courses'] = 'Cursos on estan inscrits els usuaris a redirigir';
+$string['redirect_include'] = 'Cursos on estan inscrits els usuaris a redirigir';
+$string['redirect_exclude'] = 'Cursos on estan inscrits els usuaris a NO redirigir';

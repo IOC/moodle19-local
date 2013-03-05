@@ -61,8 +61,13 @@ if ($hassiteconfig) {
     );
 
     $settings->add(
-        new admin_setting_configtextarea('local_redirect_courses',
-                                        get_string('redirect_courses', 'local'), '', '')
+        new admin_setting_configtextarea('local_redirect_include',
+                                        get_string('redirect_include', 'local'), '', '')
+    );
+
+    $settings->add(
+        new admin_setting_configtextarea('local_redirect_exclude',
+                                        get_string('redirect_exclude', 'local'), '', '')
     );
 
     $settings->add(

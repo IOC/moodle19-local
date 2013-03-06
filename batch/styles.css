@@ -24,6 +24,10 @@ ul.params input {
     margin: 0;
 }
 
+ul.params input:disabled {
+    color: #888;
+}
+
 #queue-table td, #queue-table th {
     padding: 5px 10px;
 }

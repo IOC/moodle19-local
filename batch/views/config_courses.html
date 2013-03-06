@@ -1,4 +1,4 @@
-<?php $this->web->print_header(); ;?>
+<?php $this->web->print_header(true); ;?>
 
 <div>
   <form method="post"
@@ -14,6 +14,16 @@
     <div class="section">
       <h3><?php echo batch_string('parameters'); ?></h3>
       <ul class="params">
+        <li>
+          <laabel for="prefix">
+            <?php echo batch_string('prefix'); ?>:
+          </laabel>
+          [ <input type="text" id="prefix" name="prefix" /> ]
+          <input type="checkbox" id="remove_prefix" name="remove_prefix">
+          <label for="remove_prefix">
+            <?php echo batch_string('remove'); ?>
+          </label>
+        </li>
         <li>
           <label for="suffix">
             <?php echo batch_string('suffix'); ?>:

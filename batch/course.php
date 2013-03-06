@@ -68,6 +68,20 @@ class batch_course {
         return $backup_dir . '/' . $backup_name;
     }
 
+    function change_prefix($courseid, $prefix) {
+        $course = get_record('course', 'id', $courseid);
+
+        if (preg_match('/^\[.*?\](.*)$/', $course->fullname, $match)) {
+            $course->fullname = trim($match[1]);
+        }
+
+        if ($prefix) {
+            $course->fullname = "[$prefix] {$course->fullname}";
+        }
+
+        return update_record('course', $course);
+    }
+
     function change_suffix($courseid, $suffix) {
         $course = get_record('course', 'id', $courseid);
 

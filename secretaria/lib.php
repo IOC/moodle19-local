@@ -213,6 +213,17 @@ class local_secretaria_service {
         'courses' => array('type' => 'list', 'of' => array('type' => 'text')),
     );
 
+    /* Assignments */
+
+    private $get_assignments_parameters = array(
+        'course' => array('type' => 'text'),
+    );
+
+    private $get_assignment_submissions_parameters = array(
+        'course' => array('type' => 'text'),
+        'idnumber' => array('type' => 'text'),
+    );
+
     /* Surveys */
 
     private $get_surveys_parameters = array(
@@ -382,6 +393,42 @@ class local_secretaria_moodle_19 implements local_secretaria_moodle {
     function delete_role_assignment($courseid, $userid, $roleid) {
         $context = get_context_instance(CONTEXT_COURSE, $courseid);
         role_unassign($roleid, $userid, 0, $context->id);
+    }
+
+    function get_assignment_id($courseid, $idnumber) {
+        global $CFG;
+        $sql = sprintf("SELECT a.id " .
+                       "FROM {$CFG->prefix}course_modules cm " .
+                       "JOIN {$CFG->prefix}modules m ON m.id = cm.module " .
+                       "JOIN {$CFG->prefix}assignment a ON a.id = cm.instance " .
+                       "WHERE cm.course = %d AND cm.idnumber = '%s' ".
+                       "AND m.name = '%s' AND a.course = %d",
+                       $courseid, $idnumber, 'assignment', $courseid);
+        return get_field_sql($sql);
+    }
+
+    function get_assignment_submissions($assignmentid) {
+        global $CFG;
+        $sql = sprintf("SELECT s.id, u.username AS user, g.username AS grader, s.numfiles, " .
+                       "s.timemodified AS timesubmitted, s.timemarked AS timegraded ".
+                       "FROM {$CFG->prefix}assignment_submissions s " .
+                       "JOIN {$CFG->prefix}user u ON u.id = s.userid " .
+                       "LEFT JOIN {$CFG->prefix}user g ON g.id = s.teacher ".
+                       "WHERE s.assignment = %d AND s.timemodified > 0",
+                       $assignmentid);
+        return get_records_sql($sql);
+    }
+
+    function get_assignments($courseid) {
+        global $CFG;
+        $sql = sprintf("SELECT a.id, cm.idnumber, a.name, " .
+                       "a.timeavailable AS opentime, a.timedue AS closetime " .
+                       "FROM {$CFG->prefix}course_modules cm " .
+                       "JOIN {$CFG->prefix}modules m ON m.id = cm.module " .
+                       "JOIN {$CFG->prefix}assignment a ON a.id = cm.instance " .
+                       "WHERE cm.course = %d AND m.name = '%s' AND a.course = %d",
+                       $courseid, 'assignment', $courseid);
+        return get_records_sql($sql);
     }
 
     function get_course_grade($userid, $courseid) {

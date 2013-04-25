@@ -123,6 +123,39 @@ class local_secretaria_service {
         'username' => array('type' => 'username'),
     );
 
+
+    /* Courses */
+
+    private $has_course_parameters = array(
+        'course' => array('type' => 'text'),
+    );
+
+    private $get_course_parameters = array(
+        'course' => array('type' => 'text'),
+    );
+
+    private $update_course_parameters = array(
+        'course' => array('type' => 'text'),
+        'properties' => array(
+            'type' => 'dict',
+            'optional' => array(
+                'shortname' => array('type' => 'text'),
+                'fullname' => array('type' => 'text'),
+                'visible' => array('type' => 'bool'),
+                'startdate' => array(
+                    'type' => 'dict',
+                    'required' => array(
+                        'year' => array('type' => 'int'),
+                        'month' => array('type' => 'int'),
+                        'day' => array('type' => 'int'),
+                    ),
+                ),
+            ),
+        ),
+    );
+
+    private $get_courses_parameters = array();
+
     /* Enrolments */
 
     private $get_course_enrolments_parameters = array(
@@ -286,12 +319,6 @@ class local_secretaria_service {
             ),
         ),
     );
-
-    private $has_course_parameters = array(
-        'course' => array('type' => 'text'),
-    );
-
-    private $get_courses_parameters = array();
 }
 
 class local_secretaria_moodle_19 implements local_secretaria_moodle {
@@ -429,6 +456,11 @@ class local_secretaria_moodle_19 implements local_secretaria_moodle {
                        "WHERE cm.course = %d AND m.name = '%s' AND a.course = %d",
                        $courseid, 'assignment', $courseid);
         return get_records_sql($sql);
+    }
+
+    function get_course($shortname) {
+        return get_record('course', 'shortname', addslashes($shortname), '', '', '', '',
+                          'id, shortname, fullname, visible, startdate');
     }
 
     function get_course_grade($userid, $courseid) {
@@ -693,6 +725,11 @@ class local_secretaria_moodle_19 implements local_secretaria_moodle {
     function start_transaction() {
         begin_sql();
         $this->transaction = true;
+    }
+
+    function update_course($record) {
+        $record->timemodified = time();
+        update_record('course', addslashes_recursive($record));
     }
 
     function update_password($userid, $password) {

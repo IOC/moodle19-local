@@ -649,10 +649,6 @@ class local_secretaria_moodle_19 implements local_secretaria_moodle {
         role_assign($roleid, $userid, 0, $context->id);
     }
 
-    function make_timestamp($year, $month, $day, $hour=0, $minute=0, $second=0) {
-        return make_timestamp($year, $month, $day, $hour, $minute, $second);
-    }
-
     function prevent_local_passwords($auth) {
         return get_auth_plugin($auth)->prevent_local_passwords();
     }

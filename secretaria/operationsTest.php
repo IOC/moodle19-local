@@ -1319,10 +1319,9 @@ class CreateSurveyTest extends OperationTest {
         $this->moodle->shouldReceive('section_exists')->with(102, 7)->andReturn(true);
         $this->moodle->shouldReceive('get_survey_id')->with(101, 'S1')->andReturn(201);
         $this->moodle->shouldReceive('get_survey_id')->with(102, 'S2')->andReturn(false);
-        $this->moodle->shouldReceive('make_timestamp')->with(2012, 10, 22)->andReturn(1234567890);
         $this->moodle->shouldReceive('start_transaction')->once()->ordered();
         $this->moodle->shouldReceive('create_survey')
-            ->with(102, 7, 'S2', 'Survey 2', 'Summary 2', 1234567890, 0, 201)
+            ->with(102, 7, 'S2', 'Survey 2', 'Summary 2', mktime(0, 0, 0, 10, 22, 2012), 0, 201)
             ->once()->ordered();
         $this->moodle->shouldReceive('commit_transaction')->once()->ordered();
 
@@ -1336,11 +1335,9 @@ class CreateSurveyTest extends OperationTest {
         $this->moodle->shouldReceive('section_exists')->with(102, 7)->andReturn(true);
         $this->moodle->shouldReceive('get_survey_id')->with(101, 'S1')->andReturn(201);
         $this->moodle->shouldReceive('get_survey_id')->with(102, 'S2')->andReturn(false);
-        $this->moodle->shouldReceive('make_timestamp')
-            ->with(2012, 10, 22, 23, 55)->andReturn(1234567890);
         $this->moodle->shouldReceive('start_transaction')->once()->ordered();
         $this->moodle->shouldReceive('create_survey')
-            ->with(102, 7, 'S2', 'Survey 2', 'Summary 2', 0, 1234567890, 201)
+            ->with(102, 7, 'S2', 'Survey 2', 'Summary 2', 0, mktime(23, 55, 0, 10, 22, 2012), 201)
             ->once()->ordered();
         $this->moodle->shouldReceive('commit_transaction')->once()->ordered();
 

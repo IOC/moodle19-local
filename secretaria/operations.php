@@ -580,19 +580,19 @@ class local_secretaria_operations {
             throw new local_secretaria_exception('Unknown survey');
         }
 
-        $opendate = 0;
-        if (isset($properties['opendate'])) {
-            $opendate = $this->moodle->make_timestamp($properties['opendate']['year'],
-                                                      $properties['opendate']['month'],
-                                                      $properties['opendate']['day']);
-        }
-        $closedate = 0;
-        if (isset($properties['closedate'])) {
-            $closedate = $this->moodle->make_timestamp($properties['closedate']['year'],
-                                                       $properties['closedate']['month'],
-                                                       $properties['closedate']['day'],
-                                                       23, 55);
-        }
+        $opendate = (isset($properties['opendate']) ?
+                     mktime(0, 0, 0,
+                            $properties['opendate']['month'],
+                            $properties['opendate']['day'],
+                            $properties['opendate']['year'])
+                     : 0);
+
+        $closedate = (isset($properties['closedate']) ?
+                      mktime(23, 55, 0,
+                             $properties['closedate']['month'],
+                             $properties['closedate']['day'],
+                             $properties['closedate']['year'])
+                      : 0);
 
         $this->moodle->start_transaction();
         $this->moodle->create_survey($courseid, $properties['section'], $properties['idnumber'],
@@ -678,7 +678,6 @@ interface local_secretaria_moodle {
     function groups_get_all_groups($courseid, $userid=0);
     function groups_remove_member($groupid, $userid);
     function insert_role_assignment($courseid, $userid, $roleid);
-    function make_timestamp($year, $month, $day, $hour=0, $minute=0, $second=0);
     function prevent_local_passwords($auth);
     function role_assignment_exists($courseid, $userid, $roleid);
     function rollback_transaction(Exception $e);

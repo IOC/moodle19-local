@@ -56,7 +56,7 @@ class local_secretaria_service {
         case 'username':
             return is_string($value) and preg_match('/^[a-z0-9\.-]*$/', $value);
         case 'email':
-            return is_string($value) and validate_email($value);
+            return is_string($value) and validate_email($value) or $value === '';
         case 'list':
             if (!is_array($value)) return false;
             for ($i = 0; $i < count($value); $i++) {
@@ -97,10 +97,10 @@ class local_secretaria_service {
                 'username' => array('type' => 'username'),
                 'firstname' => array('type' => 'notags'),
                 'lastname' => array('type' => 'notags'),
-                'email' => array('type' => 'email'),
             ),
             'optional' => array(
                 'password' => array('type' => 'raw'),
+                'email' => array('type' => 'email'),
             ),
         ),
     );

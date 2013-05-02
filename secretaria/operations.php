@@ -13,7 +13,7 @@ class local_secretaria_operations {
     /* Users */
 
     function get_user($username) {
-        if (!$record = $this->moodle->get_user_record($username)) {
+        if (!$record = $this->moodle->get_user($username)) {
             throw new local_secretaria_exception('Unknown user');
         }
 
@@ -85,63 +85,57 @@ class local_secretaria_operations {
     }
 
     function update_user($username, $properties) {
-        if (!$user = $this->moodle->get_user_record($username)) {
+        if (!$user = $this->moodle->get_user($username)) {
             throw new local_secretaria_exception('Unknown user');
         }
 
-        $record = new stdClass;
-        $record->id = $user->id;
+        $password = false;
 
         if (isset($properties['username'])) {
             if (empty($properties['username'])) {
                 throw new local_secretaria_exception('Invalid parameters');
             }
-            if ($properties['username'] != $username) {
-                if ($this->moodle->get_user_id($properties['username'])) {
-                    throw new local_secretaria_exception('Duplicate username');
-                }
-                $record->username = $properties['username'];
+            $newuserid = $this->moodle->get_user_id($properties['username']);
+            if ($newuserid and $newuserid !== $user->id) {
+                throw new local_secretaria_exception('Duplicate username');
             }
         }
+
         if (isset($properties['password'])) {
-            if ($this->moodle->prevent_local_passwords($user->auth)) {
-                unset($properties['password']);
-            } elseif (!$this->moodle->check_password($properties['password'])) {
-                throw new local_secretaria_exception('Invalid password');
+            if (!$this->moodle->prevent_local_passwords($user->auth)) {
+                if (!$this->moodle->check_password($properties['password'])) {
+                    throw new local_secretaria_exception('Invalid password');
+                }
+                $password = $properties['password'];
             }
+            unset($properties['password']);
         }
-        if (isset($properties['firstname'])) {
-            if (empty($properties['firstname'])) {
-                throw new local_secretaria_exception('Invalid parameters');
-            }
-            $record->firstname = $properties['firstname'];
+
+        if (isset($properties['firstname']) and empty($properties['firstname'])) {
+            throw new local_secretaria_exception('Invalid parameters');
         }
-        if (isset($properties['lastname'])) {
-            if (empty($properties['lastname'])) {
-                throw new local_secretaria_exception('Invalid parameters');
-            }
-            $record->lastname = $properties['lastname'];
-        }
-        if (isset($properties['email'])) {
-            $record->email = $properties['email'];
+
+        if (isset($properties['lastname']) and empty($properties['lastname'])) {
+            throw new local_secretaria_exception('Invalid parameters');
         }
 
         $this->moodle->start_transaction();
-        if (count((array) $record) > 1) {
-            $this->moodle->update_record('user', $record);
+        if ($properties) {
+            $properties['id'] = $user->id;
+            $this->moodle->update_user((object) $properties);
         }
-        if (isset($properties['password'])) {
-            $this->moodle->update_password($record->id, $properties['password']);
+        if ($password) {
+            $this->moodle->update_password($user->id, $password);
         }
         $this->moodle->commit_transaction();
     }
 
     function delete_user($username) {
-        if (!$record = $this->moodle->get_user_record($username)) {
+        if (!$userid = $this->moodle->get_user_id($username)) {
             throw new local_secretaria_exception('Unknown user');
         }
         $this->moodle->start_transaction();
-        $this->moodle->delete_user($record);
+        $this->moodle->delete_user($userid);
         $this->moodle->commit_transaction();
     }
 
@@ -669,9 +663,9 @@ interface local_secretaria_moodle {
     function get_role_id($role);
     function get_survey_id($courseid, $idnumber);
     function get_surveys($courseid);
+    function get_user($username);
     function get_user_id($username);
     function get_user_lastaccess($userids);
-    function get_user_record($username);
     function groups_add_member($groupid, $userid);
     function groups_create_group($courseid, $name, $description);
     function groups_delete_group($groupid);
@@ -686,6 +680,6 @@ interface local_secretaria_moodle {
     function start_transaction();
     function update_course($record);
     function update_password($userid, $password);
-    function update_record($table, $record);
+    function update_user($user);
     function user_picture_url($userid);
 }

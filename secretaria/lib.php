@@ -331,7 +331,7 @@ class local_secretaria_moodle_19 implements local_secretaria_moodle {
     }
 
     function check_password($password) {
-        return $password and check_password_policy($password);
+        return $password and check_password_policy($password, $errmsg);
     }
 
     function commit_transaction() {
@@ -413,7 +413,8 @@ class local_secretaria_moodle_19 implements local_secretaria_moodle {
         insert_record('user', $record);
     }
 
-    function delete_user($record) {
+    function delete_user($userid) {
+        $record = get_record('user', 'id', $userid);
         delete_user($record);
     }
 
@@ -591,6 +592,14 @@ class local_secretaria_moodle_19 implements local_secretaria_moodle {
         return get_records_sql($sql);
     }
 
+    function get_user($username) {
+        global $CFG;
+        $select = sprintf("mnethostid = %d AND username = '%s' AND deleted = 0",
+                          $CFG->mnet_localhost_id, addslashes($username));
+        $fields = 'id, auth, username, firstname, lastname, email, lastaccess, picture';
+        return get_record_select('user', $select, $fields);
+    }
+
     function get_user_id($username) {
         global $CFG;
         $select = sprintf("username = '%s' AND mnethostid = %d AND deleted = 0",
@@ -605,13 +614,6 @@ class local_secretaria_moodle_19 implements local_secretaria_moodle {
                        "JOIN {$CFG->prefix}course c ON c.id = l.courseid " .
                        "WHERE l.userid IN (%s)", implode(',', $userids));
         return $userids ? get_records_sql($sql) : false;
-    }
-
-    function get_user_record($username) {
-        global $CFG;
-        $select = sprintf("mnethostid = %d AND username = '%s' AND deleted = 0",
-                          $CFG->mnet_localhost_id, addslashes($username));
-        return get_record_select('user', $select);
     }
 
     function groups_add_member($groupid, $userid) {
@@ -733,8 +735,8 @@ class local_secretaria_moodle_19 implements local_secretaria_moodle {
         update_internal_user_password($record, $password);
     }
 
-    function update_record($table, $record) {
-        update_record($table, addslashes_recursive($record));
+    function update_user($record) {
+        update_record('user', addslashes_recursive($record));
     }
 
     function user_picture_url($userid) {

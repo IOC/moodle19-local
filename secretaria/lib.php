@@ -257,6 +257,12 @@ class local_secretaria_service {
         'idnumber' => array('type' => 'text'),
     );
 
+    /* Forums */
+
+    private $get_forum_stats_parameters = array(
+        'course' => array('type' => 'text'),
+    );
+
     /* Surveys */
 
     private $get_surveys_parameters = array(
@@ -478,6 +484,29 @@ class local_secretaria_moodle_19 implements local_secretaria_moodle {
 
     function get_courses() {
         return get_records_select('course', 'id <> '. SITEID, '', 'id, shortname');
+    }
+
+    function get_forum_stats($forumid) {
+        global $CFG;
+        $sql = sprintf("SELECT d.groupid, g.name AS groupname, COUNT(p.id) AS posts, " .
+                       "COUNT(DISTINCT d.id) AS discussions " .
+                       "FROM {$CFG->prefix}forum_discussions d " .
+                       "JOIN {$CFG->prefix}forum_posts p ON p.discussion = d.id " .
+                       "LEFT JOIN {$CFG->prefix}groups g ON g.id = d.groupid " .
+                       "WHERE d.forum = %d " .
+                       "GROUP BY d.groupid, g.name", $forumid);
+        return get_records_sql($sql);
+    }
+
+    function get_forums($courseid) {
+        global $CFG;
+        $sql = sprintf("SELECT f.id, cm.idnumber, f.name, f.type " .
+                       "FROM {$CFG->prefix}course_modules cm " .
+                       "JOIN {$CFG->prefix}modules m ON m.id = cm.module " .
+                       "JOIN {$CFG->prefix}forum f ON f.id = cm.instance " .
+                       "WHERE cm.course = %d AND m.name = '%s' AND f.course = %d",
+                       $courseid, 'forum', $courseid);
+        return get_records_sql($sql);
     }
 
     function get_grade_items($courseid) {

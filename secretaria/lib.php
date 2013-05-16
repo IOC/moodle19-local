@@ -307,7 +307,7 @@ class local_secretaria_service {
         ),
     );
 
-    /* Misc */
+    /* Mail */
 
     private $send_mail_parameters = array(
         'message' => array(
@@ -324,6 +324,12 @@ class local_secretaria_service {
                 'bcc' => array('type' => 'list', 'of' => array('type' => 'username')),
             ),
         ),
+    );
+
+    private $get_mail_stats_parameters = array(
+        'user' => array('type' => 'username'),
+        'starttime' => array('type' => 'int'),
+        'endtime' => array('type' => 'int'),
     );
 }
 
@@ -565,6 +571,30 @@ class local_secretaria_moodle_19 implements local_secretaria_moodle {
                        "JOIN {$CFG->prefix}user u ON u.id = gm.userid " .
                        "WHERE gm.groupid = %d AND u.mnethostid = %d AND u.deleted = 0",
                        $groupid, $CFG->mnet_localhost_id);
+        return get_records_sql($sql);
+    }
+
+    function get_mail_stats_received($userid, $starttime, $endtime) {
+        global $CFG;
+        $sql = sprintf("SELECT c.id, c.shortname AS course, COUNT(DISTINCT m.id) AS messages " .
+                       "FROM {$CFG->prefix}block_email_list_mail m " .
+                       "JOIN {$CFG->prefix}block_email_list_send s ON s.mailid = m.id " .
+                       "JOIN {$CFG->prefix}course c ON c.id = s.course " .
+                       "WHERE s.userid = %d AND s.sended = 1 AND s.userid != m.userid " .
+                       "AND m.timecreated >= %d AND m.timecreated < %d " .
+                       "GROUP BY c.id, c.shortname", $userid, $starttime, $endtime);
+        return get_records_sql($sql);
+    }
+
+    function get_mail_stats_sent($userid, $starttime, $endtime) {
+        global $CFG;
+        $sql = sprintf("SELECT c.id, c.shortname AS course, COUNT(DISTINCT m.id) AS messages " .
+                       "FROM {$CFG->prefix}block_email_list_mail m " .
+                       "JOIN {$CFG->prefix}block_email_list_send s ON s.mailid = m.id " .
+                       "JOIN {$CFG->prefix}course c ON c.id = s.course " .
+                       "WHERE m.userid = %d AND s.sended = 1 AND s.userid != m.userid " .
+                       "AND m.timecreated >= %d AND m.timecreated < %d " .
+                       "GROUP BY c.id, c.shortname", $userid, $starttime, $endtime);
         return get_records_sql($sql);
     }
 

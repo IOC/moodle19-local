@@ -123,6 +123,7 @@ class local_secretaria_service {
         'username' => array('type' => 'username'),
     );
 
+    private $get_users_parameters = array();
 
     /* Courses */
 
@@ -673,6 +674,12 @@ class local_secretaria_moodle_19 implements local_secretaria_moodle {
                        "JOIN {$CFG->prefix}course c ON c.id = l.courseid " .
                        "WHERE l.userid IN (%s)", implode(',', $userids));
         return $userids ? get_records_sql($sql) : false;
+    }
+
+    function get_users() {
+        global $CFG;
+        $select = "mnethostid = {$CFG->mnet_localhost_id} AND deleted = 0 AND username <> 'guest'";
+        return get_records_select('user', $select, '', 'id, username');
     }
 
     function groups_add_member($groupid, $userid) {

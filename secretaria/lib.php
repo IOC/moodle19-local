@@ -264,6 +264,11 @@ class local_secretaria_service {
         'course' => array('type' => 'text'),
     );
 
+    private $get_forum_user_stats_parameters = array(
+        'course' => array('type' => 'text'),
+        'users' => array('type' => 'list', 'of' => array('type' => 'username')),
+    );
+
     /* Surveys */
 
     private $get_surveys_parameters = array(
@@ -502,6 +507,28 @@ class local_secretaria_moodle_19 implements local_secretaria_moodle {
                        "LEFT JOIN {$CFG->prefix}groups g ON g.id = d.groupid " .
                        "WHERE d.forum = %d " .
                        "GROUP BY d.groupid, g.name", $forumid);
+        return get_records_sql($sql);
+    }
+
+    function get_forum_user_stats($forumid, $users) {
+        global $CFG;
+
+        $sqlin = '';
+
+        if (!empty($users)) {
+            $sqlin = 'AND u.username IN(' . implode(',', $users) . ') ';
+        }
+
+        $sql = sprintf("SELECT u.username, g.name AS groupname, COUNT(DISTINCT di.id) AS discussions, " .
+                       "COUNT(p.id) AS posts " .
+                       "FROM {$CFG->prefix}forum_posts p " .
+                       "JOIN {$CFG->prefix}user u ON u.id = p.userid " .
+                       "JOIN {$CFG->prefix}forum_discussions d ON p.discussion = d.id " .
+                       "LEFT JOIN {$CFG->prefix}groups g ON g.id = d.groupid " .
+                       "LEFT JOIN {$CFG->prefix}forum_discussions di ON di.userid = u.id AND p.discussion = di.id " .
+                       "WHERE d.forum = %d " .
+                       $sqlin .
+                       "GROUP BY u.username", $forumid);
         return get_records_sql($sql);
     }
 

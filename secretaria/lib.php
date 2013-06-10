@@ -516,7 +516,7 @@ class local_secretaria_moodle_19 implements local_secretaria_moodle {
         $sqlin = '';
 
         if (!empty($users)) {
-            $sqlin = 'AND u.username IN(' . implode(',', $users) . ') ';
+            $sqlin = 'AND u.username IN ("' . implode('","', $users) . '") ';
         }
 
         $sql = sprintf("SELECT u.username, g.name AS groupname, COUNT(DISTINCT di.id) AS discussions, " .

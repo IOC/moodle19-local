@@ -456,7 +456,7 @@ class local_secretaria_moodle_19 implements local_secretaria_moodle {
     function get_assignment_submissions($assignmentid) {
         global $CFG;
         $sql = sprintf("SELECT s.id, u.username AS user, g.username AS grader, s.numfiles, " .
-                       "s.timemodified AS timesubmitted, s.timemarked AS timegraded ".
+                       "s.timemodified AS timesubmitted, s.timemarked AS timegraded, 0 AS attempt ".
                        "FROM {$CFG->prefix}assignment_submissions s " .
                        "JOIN {$CFG->prefix}user u ON u.id = s.userid " .
                        "LEFT JOIN {$CFG->prefix}user g ON g.id = s.teacher ".

@@ -46,9 +46,9 @@ class local_secretaria_service {
         case 'alphanumext':
             return is_string($value) and preg_match('/^[a-zA-Z0-9_-]*$/', $value);
         case 'notags':
-            return is_string($value) and $value === clean_param($value, PARAM_NOTAGS);
+            return is_string($value) and $value === strip_tags($value);
         case 'text':
-            return is_string($value) and $value === clean_param($value, PARAM_TEXT);
+            return is_string($value) and $value === strip_tags($value, '<lang><span>');
         case 'int':
             return is_int($value) or is_string($value) and $value === (string) (int) $value;
         case 'bool':

@@ -54,7 +54,7 @@ class local_secretaria_service {
         case 'bool':
             return is_bool($value) or $value === 0 or $value === 1 or $value === '0' or $aalue === '1';
         case 'username':
-            return is_string($value) and preg_match('/^[a-z0-9\.-]*$/', $value);
+            return is_string($value) and $value === preg_replace('/[^-\.@_a-z0-9]/', '', $value);
         case 'email':
             return is_string($value) and validate_email($value) or $value === '';
         case 'list':

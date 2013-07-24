@@ -275,6 +275,10 @@ class local_secretaria_service {
         'course' => array('type' => 'text'),
     );
 
+    private $get_surveys_data_parameters = array(
+        'course' => array('type' => 'text'),
+    );
+
     private $create_survey_parameters = array(
         'properties' => array(
             'type' => 'dict',
@@ -676,6 +680,85 @@ class local_secretaria_moodle_19 implements local_secretaria_moodle {
                        "WHERE m.name = 'questionnaire' AND cm.course = %d " .
                        "AND qs.owner = %d AND qs.status != 4",
                        $courseid, $courseid);
+        return get_records_sql($sql);
+    }
+
+    function get_survey_question_types() {
+        global $CFG;
+
+        return get_records_menu('questionnaire_question_type', '', '', '', 'typeid, response_table');
+    }
+
+    function get_survey_questions($surveyid) {
+        global $CFG;
+
+        $sql = sprintf("SELECT q.id, q.name, q.content, q.type_id, q.position, qt.has_choices " .
+                       "FROM {$CFG->prefix}questionnaire_question q " .
+                       "JOIN {$CFG->prefix}questionnaire_question_type qt ON qt.id = q.type_id " .
+                       "WHERE q.survey_id = %d",
+                       $surveyid);
+
+        return get_records_sql($sql);
+    }
+
+    function get_survey_responses_simple($questionids, $type) {
+        global $CFG;
+
+        $field = ' ';
+
+        if ($type == 'response_bool') {
+            $field = ', t.choice_id as content ';
+        } elseif ($type == 'response_text' or $type == 'response_date') {
+            $field = ', t.response as content ';
+        }
+
+        $sql = sprintf("SELECT t.id, t.response_id AS responseid, t.question_id AS questionid, u.username" . $field .
+                       "FROM {$CFG->prefix}questionnaire_" . $type . " t " .
+                       "JOIN {$CFG->prefix}questionnaire_response r ON r.id = t.response_id " .
+                       "JOIN {$CFG->prefix}user u ON u.id = r.username " .
+                       "WHERE t.question_id IN (%s)", implode(',', $questionids));
+
+        return get_records_sql($sql);
+    }
+
+    function get_survey_responses_multiple($questionids, $type) {
+        global $CFG;
+
+        if ($type == 'response_rank') {
+            $field = ', t.rank ';
+            $sqlro = '';
+        } elseif ($type == 'resp_single') {
+            $field = ' ';
+            $sqlro = '';
+        } else {
+            $field = ', ro.response AS other ';
+            $sqlro = "LEFT JOIN {$CFG->prefix}questionnaire_response_other ro ON ro.response_id=t.response_id AND c.content LIKE '!other%' ";
+        }
+
+        $sql = sprintf("SELECT t.id, t.response_id AS responseid, t.question_id AS questionid, c.content, u.username" . $field .
+                       "FROM {$CFG->prefix}questionnaire_" .$type . " t " .
+                       "JOIN {$CFG->prefix}questionnaire_quest_choice c ON t.choice_id = c.id " .
+                       "JOIN {$CFG->prefix}questionnaire_response r ON r.id = t.response_id " .
+                       "JOIN {$CFG->prefix}user u ON u.id = r.username " .
+                       $sqlro .
+                       "WHERE t.question_id IN (%s)", implode(',', $questionids));
+
+        return get_records_sql($sql);
+    }
+
+    function get_survey_question_choices($questionids, $type) {
+        global $CFG;
+
+        if ($type == 'response_rank') {
+            $sql = sprintf("SELECT id as questionid, length as content " .
+                           "FROM {$CFG->prefix}questionnaire_question " .
+                           "WHERE id IN (%s)", implode(',', $questionids));
+        } else {
+            $sql = sprintf("SELECT id, question_id as questionid, content " .
+                           "FROM {$CFG->prefix}questionnaire_quest_choice " .
+                           "WHERE question_id IN (%s)", implode(',', $questionids));
+        }
+
         return get_records_sql($sql);
     }
 

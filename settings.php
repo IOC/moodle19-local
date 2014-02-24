@@ -32,6 +32,12 @@ if ($hassiteconfig) {
     );
 
     $settings->add(
+        new admin_setting_configtext('local_webservice_campus2_token',
+                                     get_string('webservice_campus2_token', 'local'),
+                                     '', '')
+    );
+
+    $settings->add(
         new admin_setting_configcheckbox('local_testing_mode',
                                          get_string('testing_mode', 'local'),
                                          '', '0')

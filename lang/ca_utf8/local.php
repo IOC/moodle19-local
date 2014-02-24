@@ -40,3 +40,4 @@ $string['redirect_url'] = 'URL on redirigir els usuaris';
 $string['redirect_include'] = 'Cursos on estan inscrits els usuaris a redirigir';
 $string['redirect_exclude'] = 'Cursos on estan inscrits els usuaris a NO redirigir';
 $string['webservice_campus2_token'] = 'Token webservice del campus2';
+$string['webservice_campus2_url'] = 'URL webservice del campus2';

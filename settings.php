@@ -38,6 +38,12 @@ if ($hassiteconfig) {
     );
 
     $settings->add(
+        new admin_setting_configtext('local_webservice_campus2_url',
+                                     get_string('webservice_campus2_url', 'local'),
+                                     '', '', PARAM_URL)
+    );
+
+    $settings->add(
         new admin_setting_configcheckbox('local_testing_mode',
                                          get_string('testing_mode', 'local'),
                                          '', '0')
